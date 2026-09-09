@@ -1,5 +1,4 @@
 <script>
-	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import WelcomeCard from './components/welcomeCard.svelte';
 	import NewsSection from './components/newsSection.svelte';
@@ -9,13 +8,9 @@
 	import ActivityFeed from './components/activityFeed.svelte';
 	import FrequentContacts from './components/frecuentContacts.svelte';
 	import BirthdayList from './components/birthDayList.svelte';
-	import SideBar from './components/sideBar.svelte';
 	import { getDashboardData } from '$lib/services/dashboardService.js';
 
 	const dashboard = getDashboardData();
-	let activeSection = 'inicio';
-	let isMobileMenuOpen = false;
-	let isSidebarCollapsed = true;
 	let currentDate = '';
 
 	function formatDate(dateString) {
@@ -36,13 +31,6 @@
 		});
 	}
 
-	function navigateTo(route, section) {
-		activeSection = section;
-		if (window.innerWidth < 768) isMobileMenuOpen = false;
-		window.scrollTo({ top: 0, behavior: 'smooth' });
-		goto(route);
-	}
-
 	function calculatePercentage(value, target) {
 		return target > 0 ? Math.min((value / target) * 100, 100) : 0;
 	}
@@ -61,18 +49,12 @@
 </script>
 
 <div class="min-h-screen overflow-y-auto bg-transparent">
-	<div class="flex">
-		<SideBar bind:isSidebarCollapsed {isMobileMenuOpen} {activeSection} {navigateTo} />
-
-		<main
-			class="min-w-0 flex-1 transition-[margin] duration-300"
-			style="margin-left: {isSidebarCollapsed ? '4rem' : '18rem'}"
-		>
+	<main class="min-w-0">
 			<div class="container mx-auto space-y-8 px-4 py-8 pt-20">
 				<WelcomeCard userData={dashboard.userData} {currentDate} {formatDateTime} />
 				<div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
 					<div class="space-y-6 lg:col-span-2">
-						<QuickAccess quickAccess={dashboard.quickAccess} {navigateTo} />
+						<QuickAccess quickAccess={dashboard.quickAccess} />
 						<NewsSection latestNews={dashboard.latestNews} {formatDate} />
 						<PerformanceMetrics
 							performanceMetrics={dashboard.performanceMetrics}
@@ -89,5 +71,4 @@
 				</div>
 			</div>
 		</main>
-	</div>
 </div>
