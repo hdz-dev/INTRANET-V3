@@ -1,0 +1,173 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DISABLED
+}
+
+enum ScopeType {
+  GLOBAL
+  DEPENDENCY
+  PROCESS
+  DEPENDENCY_PROCESS
+}
+
+model User {
+  id                  String               @id @default(cuid())
+  email               String               @unique
+  name                String
+  passwordHash        String
+  status              UserStatus           @default(ACTIVE)
+  mfaRequired         Boolean              @default(false)
+  mfaEnabled          Boolean              @default(false)
+  dependencyId        String?
+  lastLoginAt         DateTime?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  dependency          Dependency?          @relation(fields: [dependencyId], references: [id])
+  roleAssignments     RoleAssignment[]
+  sessions            Session[]
+  passwordResetTokens PasswordResetToken[]
+  auditEvents         AuditEvent[]         @relation("AuditActor")
+  createdRoles        Role[]               @relation("RoleCreatedBy")
+  createdDependencies Dependency[]         @relation("DependencyCreatedBy")
+  createdProcesses    Process[]            @relation("ProcessCreatedBy")
+}
+
+model Dependency {
+  id          String           @id @default(cuid())
+  name        String           @unique
+  code        String           @unique
+  active      Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  createdById String?
+  createdBy   User?            @relation("DependencyCreatedBy", fields: [createdById], references: [id])
+  users       User[]
+  processes   Process[]
+  assignments RoleAssignment[]
+}
+
+model Process {
+  id           String           @id @default(cuid())
+  name         String
+  code         String           @unique
+  active       Boolean          @default(true)
+  dependencyId String?
+  createdById  String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  dependency   Dependency?      @relation(fields: [dependencyId], references: [id])
+  createdBy    User?            @relation("ProcessCreatedBy", fields: [createdById], references: [id])
+  assignments  RoleAssignment[]
+}
+
+model Module {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  code        String       @unique
+  active      Boolean      @default(true)
+  permissions Permission[]
+}
+
+model Permission {
+  id          String           @id @default(cuid())
+  code        String           @unique
+  description String
+  moduleId    String
+  module      Module           @relation(fields: [moduleId], references: [id])
+  roles       RolePermission[]
+}
+
+model Role {
+  id          String           @id @default(cuid())
+  name        String           @unique
+  description String
+  active      Boolean          @default(true)
+  critical    Boolean          @default(false)
+  createdById String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  createdBy   User?            @relation("RoleCreatedBy", fields: [createdById], references: [id])
+  permissions RolePermission[]
+  assignments RoleAssignment[]
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+}
+
+model RoleAssignment {
+  id           String      @id @default(cuid())
+  userId       String
+  roleId       String
+  scopeType    ScopeType   @default(GLOBAL)
+  dependencyId String?
+  processId    String?
+  active       Boolean     @default(true)
+  startsAt     DateTime?
+  endsAt       DateTime?
+  createdAt    DateTime    @default(now())
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role         Role        @relation(fields: [roleId], references: [id])
+  dependency   Dependency? @relation(fields: [dependencyId], references: [id])
+  process      Process?    @relation(fields: [processId], references: [id])
+
+  @@index([userId, active])
+}
+
+model Session {
+  id           String    @id @default(cuid())
+  tokenHash    String    @unique
+  userId       String
+  createdAt    DateTime  @default(now())
+  expiresAt    DateTime
+  lastSeenAt   DateTime  @default(now())
+  revokedAt    DateTime?
+  revokeReason String?
+  ipAddress    String?
+  userAgent    String?
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt, expiresAt])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  userId    String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt, usedAt])
+}
+
+model AuditEvent {
+  id        String   @id @default(cuid())
+  action    String
+  entity    String
+  entityId  String?
+  actorId   String?
+  metadata  Json?
+  ipAddress String?
+  createdAt DateTime @default(now())
+  actor     User?    @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([action, createdAt])
+  @@index([actorId, createdAt])
+}
