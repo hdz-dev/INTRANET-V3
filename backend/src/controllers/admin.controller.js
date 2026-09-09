@@ -12,6 +12,12 @@ const createUserSchema = z.object({
 });
 
 const statusSchema = z.object({ status: z.enum(['ACTIVE', 'SUSPENDED', 'DISABLED']) });
+const updateUserSchema = z.object({
+  name: z.string().trim().min(2).max(120).optional(),
+  email: z.string().trim().email().max(254).optional(),
+  password: z.string().min(12).max(256).optional(),
+  dependencyId: z.string().cuid().nullable().optional()
+});
 const roleAssignmentSchema = z.object({
   roleId: z.string().cuid(),
   scopeType: z.enum(['GLOBAL', 'DEPENDENCY', 'PROCESS', 'DEPENDENCY_PROCESS']).default('GLOBAL'),
@@ -32,7 +38,7 @@ const roleSchema = z.object({
 
 export async function listUsers(request, response) {
   const users = await prisma.user.findMany({
-    select: { id: true, email: true, name: true, status: true, mfaRequired: true, mfaEnabled: true, dependency: { select: { id: true, name: true, code: true } }, roleAssignments: { where: { active: true }, select: { id: true, scopeType: true, role: { select: { id: true, name: true } } } } },
+    select: { id: true, email: true, name: true, status: true, createdAt: true, mfaRequired: true, mfaEnabled: true, dependency: { select: { id: true, name: true, code: true } }, roleAssignments: { where: { active: true }, select: { id: true, scopeType: true, role: { select: { id: true, name: true } } } } },
     orderBy: { name: 'asc' }
   });
   return response.json({ users });
@@ -107,6 +113,38 @@ export async function updateUserStatus(request, response) {
   const user = await prisma.user.update({ where: { id: request.params.id }, data: { status: result.data.status }, select: { id: true, email: true, name: true, status: true } });
   await recordAudit({ request, actorId: request.auth.user.id, action: 'USER_STATUS_UPDATED', entity: 'User', entityId: user.id, metadata: { status: user.status } });
   return response.json({ user });
+}
+
+export async function updateUser(request, response) {
+  const result = updateUserSchema.safeParse(request.body);
+  if (!result.success) return response.status(400).json({ message: 'Datos de usuario inválidos.', issues: result.error.issues });
+  if (request.params.id === request.auth.user.id) return response.status(400).json({ message: 'No puedes editar tu propia cuenta desde este módulo.' });
+  const data = result.data;
+  if (data.email) {
+    const existing = await prisma.user.findFirst({ where: { email: data.email.toLowerCase(), id: { not: request.params.id } } });
+    if (existing) return response.status(409).json({ message: 'El correo ya está registrado.' });
+  }
+  const updateData = { ...data, email: data.email?.toLowerCase() };
+  if (data.password) updateData.passwordHash = await argon2.hash(data.password, { type: argon2.argon2id });
+  delete updateData.password;
+  const user = await prisma.user.update({ where: { id: request.params.id }, data: updateData, select: { id: true, email: true, name: true, status: true, createdAt: true, dependency: { select: { id: true, name: true, code: true } } } });
+  await recordAudit({ request, actorId: request.auth.user.id, action: 'USER_UPDATED', entity: 'User', entityId: user.id, metadata: { email: user.email } });
+  return response.json({ user });
+}
+
+export async function deleteUser(request, response) {
+  if (request.params.id === request.auth.user.id) return response.status(400).json({ message: 'No puedes eliminar tu propia cuenta.' });
+  const user = await prisma.user.findUnique({ where: { id: request.params.id }, select: { id: true, email: true, name: true } });
+  if (!user) return response.status(404).json({ message: 'Usuario no encontrado.' });
+  await prisma.$transaction(async (transaction) => {
+    await transaction.auditEvent.updateMany({ where: { actorId: user.id }, data: { actorId: null } });
+    await transaction.role.updateMany({ where: { createdById: user.id }, data: { createdById: null } });
+    await transaction.dependency.updateMany({ where: { createdById: user.id }, data: { createdById: null } });
+    await transaction.process.updateMany({ where: { createdById: user.id }, data: { createdById: null } });
+    await transaction.user.delete({ where: { id: user.id } });
+  });
+  await recordAudit({ request, actorId: request.auth.user.id, action: 'USER_DELETED', entity: 'User', entityId: user.id, metadata: { email: user.email } });
+  return response.status(204).send();
 }
 
 export async function assignRole(request, response) {
