@@ -343,7 +343,7 @@
 											</div></td
 										><td
 											><button
-												class="inline-flex items-center rounded-lg px-1.5 py-1 hover:bg-gray-100/75"
+												class="inline-flex items-center rounded-lg px-1.5 py-1"
 												type="button"
 												title={user.status === 'ACTIVE' ? 'Desactivar Usuario' : 'Activar Usuario'}
 												aria-label={user.status === 'ACTIVE'
@@ -359,15 +359,15 @@
 													class="mr-2 h-2 w-2 rounded-full"
 												></span>
 												<span
-													class="text-sm font-medium"
+													class="text-sm font-medium text-center"
 													class:text-green-700={user.status === 'ACTIVE'}
 													class:text-gray-600={user.status !== 'ACTIVE'}
-													>{user.status === 'ACTIVE' ? 'Activo' : user.status}</span
+													>{user.status === 'ACTIVE' ? 'Activo' : "Inactivo"}</span
 												>
 												<span
 													class:translate-x-4={user.status === 'ACTIVE'}
 													class:translate-x-0={user.status !== 'ACTIVE'}
-													class="ml-2 inline-flex h-5 w-9 items-center rounded-full bg-gray-300 p-0.5 transition-colors"
+													class="m-2 inline-flex h-5 w-9 items-center rounded-full bg-gray-300 p-0.5 transition-colors"
 													class:bg-green-500={user.status === 'ACTIVE'}
 													><span class="h-4 w-4 rounded-full bg-white shadow"></span></span
 												>
