@@ -22,6 +22,7 @@ enum ScopeType {
 
 model User {
   id                  String               @id @default(cuid())
+  documentId          String?              @unique
   email               String               @unique
   name                String
   passwordHash        String
@@ -29,10 +30,12 @@ model User {
   mfaRequired         Boolean              @default(false)
   mfaEnabled          Boolean              @default(false)
   dependencyId        String?
+  areaId              String?
   lastLoginAt         DateTime?
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
   dependency          Dependency?          @relation(fields: [dependencyId], references: [id])
+  area                Area?                @relation(fields: [areaId], references: [id])
   roleAssignments     RoleAssignment[]
   sessions            Session[]
   passwordResetTokens PasswordResetToken[]
@@ -53,7 +56,22 @@ model Dependency {
   createdBy   User?            @relation("DependencyCreatedBy", fields: [createdById], references: [id])
   users       User[]
   processes   Process[]
+  areas       Area[]
   assignments RoleAssignment[]
+}
+
+model Area {
+  id           String      @id @default(cuid())
+  name         String
+  code         String      @unique
+  active       Boolean     @default(true)
+  dependencyId String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  dependency   Dependency? @relation(fields: [dependencyId], references: [id])
+  users        User[]
+
+  @@unique([name, dependencyId])
 }
 
 model Process {

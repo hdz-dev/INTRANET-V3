@@ -4,19 +4,30 @@ import { prisma } from '../infrastructure/prisma.js';
 import { recordAudit } from '../domain/audit/audit.js';
 
 const createUserSchema = z.object({
+  documentId: z.string().trim().min(5).max(30),
   email: z.string().trim().email().max(254),
   name: z.string().trim().min(2).max(120),
   password: z.string().min(12).max(256),
-  dependencyId: z.string().cuid().optional(),
+  dependencyId: z.string().cuid(),
+  areaId: z.string().cuid(),
+  roleId: z.string().cuid(),
+  scopeType: z.enum(['GLOBAL', 'DEPENDENCY', 'PROCESS', 'DEPENDENCY_PROCESS']).default('GLOBAL'),
+  processId: z.string().cuid().optional(),
   status: z.enum(['ACTIVE', 'SUSPENDED', 'DISABLED']).default('ACTIVE')
+}).superRefine((value, context) => {
+  if (value.scopeType.includes('DEPENDENCY') && !value.dependencyId) context.addIssue({ code: 'custom', path: ['dependencyId'], message: 'La dependencia es obligatoria.' });
+  if (value.scopeType.includes('PROCESS') && !value.processId) context.addIssue({ code: 'custom', path: ['processId'], message: 'El proceso es obligatorio.' });
+  if (value.roleId && !value.dependencyId && value.scopeType !== 'GLOBAL') context.addIssue({ code: 'custom', path: ['dependencyId'], message: 'La dependencia es obligatoria para el alcance seleccionado.' });
 });
 
 const statusSchema = z.object({ status: z.enum(['ACTIVE', 'SUSPENDED', 'DISABLED']) });
 const updateUserSchema = z.object({
   name: z.string().trim().min(2).max(120).optional(),
+  documentId: z.string().trim().min(5).max(30).optional(),
   email: z.string().trim().email().max(254).optional(),
   password: z.string().min(12).max(256).optional(),
   dependencyId: z.string().cuid().nullable().optional()
+  ,areaId: z.string().cuid().nullable().optional()
 });
 const roleAssignmentSchema = z.object({
   roleId: z.string().cuid(),
@@ -38,7 +49,7 @@ const roleSchema = z.object({
 
 export async function listUsers(request, response) {
   const users = await prisma.user.findMany({
-    select: { id: true, email: true, name: true, status: true, createdAt: true, mfaRequired: true, mfaEnabled: true, dependency: { select: { id: true, name: true, code: true } }, roleAssignments: { where: { active: true }, select: { id: true, scopeType: true, role: { select: { id: true, name: true } } } } },
+    select: { id: true, documentId: true, email: true, name: true, status: true, createdAt: true, mfaRequired: true, mfaEnabled: true, dependency: { select: { id: true, name: true, code: true } }, area: { select: { id: true, name: true, code: true } }, roleAssignments: { where: { active: true }, select: { id: true, scopeType: true, role: { select: { id: true, name: true } } } } },
     orderBy: { name: 'asc' }
   });
   return response.json({ users });
@@ -86,21 +97,27 @@ export async function listPermissions(request, response) {
   return response.json({ permissions });
 }
 
+export async function listAreas(request, response) {
+  const areas = await prisma.area.findMany({ where: { active: true }, orderBy: { name: 'asc' }, select: { id: true, name: true, code: true, dependencyId: true } });
+  return response.json({ areas });
+}
+
 export async function createUser(request, response) {
   const result = createUserSchema.safeParse(request.body);
   if (!result.success) return response.status(400).json({ message: 'Datos de usuario inválidos.' });
   const data = result.data;
+  const existingDocument = await prisma.user.findUnique({ where: { documentId: data.documentId } });
+  if (existingDocument) return response.status(409).json({ message: 'El documento ya está registrado.' });
   const existing = await prisma.user.findUnique({ where: { email: data.email.toLowerCase() } });
   if (existing) return response.status(409).json({ message: 'El correo ya está registrado.' });
-  const user = await prisma.user.create({
-    data: {
-      email: data.email.toLowerCase(),
-      name: data.name,
-      passwordHash: await argon2.hash(data.password, { type: argon2.argon2id }),
-      status: data.status,
-      dependencyId: data.dependencyId
-    },
-    select: { id: true, email: true, name: true, status: true, dependencyId: true }
+  const area = await prisma.area.findUnique({ where: { id: data.areaId } });
+  if (!area) return response.status(404).json({ message: 'Área no encontrada.' });
+  if (area.dependencyId && area.dependencyId !== data.dependencyId) return response.status(400).json({ message: 'El área no pertenece a la dependencia seleccionada.' });
+  if (!(await prisma.role.findFirst({ where: { id: data.roleId, active: true } }))) return response.status(404).json({ message: 'Rol no encontrado.' });
+  const user = await prisma.$transaction(async (transaction) => {
+    const created = await transaction.user.create({ data: { documentId: data.documentId, email: data.email.toLowerCase(), name: data.name, passwordHash: await argon2.hash(data.password, { type: argon2.argon2id }), status: data.status, dependencyId: data.dependencyId, areaId: data.areaId }, select: { id: true, documentId: true, email: true, name: true, status: true, dependencyId: true, areaId: true } });
+    await transaction.roleAssignment.create({ data: { userId: created.id, roleId: data.roleId, scopeType: data.scopeType, dependencyId: data.dependencyId, processId: data.processId } });
+    return created;
   });
   await recordAudit({ request, actorId: request.auth.user.id, action: 'USER_CREATED', entity: 'User', entityId: user.id, metadata: { email: user.email } });
   return response.status(201).json({ user });

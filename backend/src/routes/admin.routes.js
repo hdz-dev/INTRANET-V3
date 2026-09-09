@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { assignRole, createRole, createUser, deleteUser, listAuditEvents, listDependencies, listPermissions, listProcesses, listRoles, listSessions, listUsers, revokeSessionById, updateRolePermissions, updateUser, updateUserStatus } from '../controllers/admin.controller.js';
+import { assignRole, createRole, createUser, deleteUser, listAreas, listAuditEvents, listDependencies, listPermissions, listProcesses, listRoles, listSessions, listUsers, revokeSessionById, updateRolePermissions, updateUser, updateUserStatus } from '../controllers/admin.controller.js';
 import { requireAuth, requirePermission } from '../middleware/auth.js';
 
 const router = Router();
@@ -11,6 +11,7 @@ router.patch('/users/:id/status', requirePermission('users.disable'), updateUser
 router.delete('/users/:id', requirePermission('users.disable'), deleteUser);
 router.post('/users/:id/roles', requirePermission('roles.manage'), assignRole);
 router.get('/dependencies', requirePermission('dependencies.read'), listDependencies);
+router.get('/areas', requirePermission('dependencies.read'), listAreas);
 router.get('/processes', requirePermission('processes.read'), listProcesses);
 router.get('/sessions', requirePermission('sessions.read'), listSessions);
 router.post('/sessions/:id/revoke', requirePermission('sessions.revoke'), revokeSessionById);

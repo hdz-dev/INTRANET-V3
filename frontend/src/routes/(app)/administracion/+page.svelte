@@ -10,17 +10,26 @@
 	let message = '';
 	let searchTerm = '';
 	let roleFilter = 'ALL';
-	let selectedUser = null;
 	let showUserModal = false;
 	let editingUser = null;
-	let userForm = { name: '', email: '', password: '', dependencyId: '' };
-	let assignmentForm = { roleId: '', scopeType: 'GLOBAL', dependencyId: '', processId: '' };
+	let userForm = {
+		documentId: '',
+		name: '',
+		email: '',
+		password: '',
+		dependencyId: '',
+		areaId: '',
+		roleId: '',
+		scopeType: 'GLOBAL',
+		processId: ''
+	};
 	let roleForm = { name: '', description: '', critical: false, permissionIds: [] };
 	let data = {
 		users: [],
 		roles: [],
 		permissions: [],
 		dependencies: [],
+		areas: [],
 		processes: [],
 		sessions: [],
 		events: []
@@ -58,16 +67,18 @@
 				apiRequest('/api/admin/roles'),
 				apiRequest('/api/admin/permissions'),
 				apiRequest('/api/admin/dependencies'),
+				apiRequest('/api/admin/areas'),
 				apiRequest('/api/admin/processes'),
 				apiRequest('/api/admin/sessions'),
 				apiRequest('/api/admin/audit')
 			]);
-			const [users, roles, permissions, dependencies, processes, sessions, events] = results;
+			const [users, roles, permissions, dependencies, areas, processes, sessions, events] = results;
 			data = {
 				users: users.status === 'fulfilled' ? users.value.users : [],
 				roles: roles.status === 'fulfilled' ? roles.value.roles : [],
 				permissions: permissions.status === 'fulfilled' ? permissions.value.permissions : [],
 				dependencies: dependencies.status === 'fulfilled' ? dependencies.value.dependencies : [],
+				areas: areas.status === 'fulfilled' ? areas.value.areas : [],
 				processes: processes.status === 'fulfilled' ? processes.value.processes : [],
 				sessions: sessions.status === 'fulfilled' ? sessions.value.sessions : [],
 				events: events.status === 'fulfilled' ? events.value.events : []
@@ -84,8 +95,28 @@
 	function openUserModal(user = null) {
 		editingUser = user;
 		userForm = user
-			? { name: user.name, email: user.email, password: '', dependencyId: user.dependency?.id || '' }
-			: { name: '', email: '', password: '', dependencyId: '' };
+			? {
+					documentId: user.documentId || '',
+					name: user.name,
+					email: user.email,
+					password: '',
+					dependencyId: user.dependency?.id || '',
+					areaId: user.area?.id || '',
+					roleId: '',
+					scopeType: 'GLOBAL',
+					processId: ''
+				}
+			: {
+					documentId: '',
+					name: '',
+					email: '',
+					password: '',
+					dependencyId: '',
+					areaId: '',
+					roleId: '',
+					scopeType: 'GLOBAL',
+					processId: ''
+				};
 		showUserModal = true;
 		message = '';
 	}
@@ -99,14 +130,28 @@
 		saving = true;
 		errorMessage = '';
 		try {
-			const payload = { ...userForm, dependencyId: userForm.dependencyId || null };
+			const payload = {
+				...userForm,
+				dependencyId: userForm.dependencyId || undefined,
+				areaId: userForm.areaId || undefined,
+				roleId: userForm.roleId || undefined,
+				processId: userForm.processId || undefined
+			};
 			if (!payload.password) delete payload.password;
+			if (editingUser) {
+				delete payload.roleId;
+				delete payload.scopeType;
+				delete payload.processId;
+				if (!payload.documentId) delete payload.documentId;
+			}
 			await apiRequest(editingUser ? `/api/admin/users/${editingUser.id}` : '/api/admin/users', {
 				method: editingUser ? 'PATCH' : 'POST',
 				body: JSON.stringify(payload)
 			});
 			closeUserModal();
-			message = editingUser ? 'Usuario actualizado correctamente.' : 'Usuario creado correctamente.';
+			message = editingUser
+				? 'Usuario actualizado correctamente.'
+				: 'Usuario creado correctamente.';
 			await loadAdministration();
 		} catch (error) {
 			errorMessage = error.message || 'No fue posible crear el usuario.';
@@ -117,7 +162,10 @@
 
 	async function updateUserStatus(user, status) {
 		const previousStatus = user.status;
-		data = { ...data, users: data.users.map((item) => item.id === user.id ? { ...item, status } : item) };
+		data = {
+			...data,
+			users: data.users.map((item) => (item.id === user.id ? { ...item, status } : item))
+		};
 		saving = true;
 		try {
 			await apiRequest(`/api/admin/users/${user.id}/status`, {
@@ -127,7 +175,12 @@
 			message = 'Estado de usuario actualizado.';
 			await loadAdministration();
 		} catch (error) {
-			data = { ...data, users: data.users.map((item) => item.id === user.id ? { ...item, status: previousStatus } : item) };
+			data = {
+				...data,
+				users: data.users.map((item) =>
+					item.id === user.id ? { ...item, status: previousStatus } : item
+				)
+			};
 			errorMessage = error.message || 'No fue posible actualizar el usuario.';
 		} finally {
 			saving = false;
@@ -141,38 +194,10 @@
 		saving = true;
 		try {
 			await apiRequest(`/api/admin/users/${user.id}`, { method: 'DELETE' });
-			if (selectedUser?.id === user.id) selectedUser = null;
 			message = 'Usuario eliminado correctamente.';
 		} catch (error) {
 			data = { ...data, users: previousUsers };
 			errorMessage = error.message || 'No fue posible eliminar el usuario.';
-		} finally {
-			saving = false;
-		}
-	}
-
-	function selectUser(user) {
-		selectedUser = user;
-		assignmentForm = { roleId: '', scopeType: 'GLOBAL', dependencyId: '', processId: '' };
-	}
-
-	async function assignRole() {
-		if (!selectedUser || !assignmentForm.roleId) return;
-		saving = true;
-		try {
-			await apiRequest(`/api/admin/users/${selectedUser.id}/roles`, {
-				method: 'POST',
-				body: JSON.stringify({
-					...assignmentForm,
-					dependencyId: assignmentForm.dependencyId || undefined,
-					processId: assignmentForm.processId || undefined
-				})
-			});
-			message = 'Rol asignado correctamente.';
-			await loadAdministration();
-			selectedUser = data.users.find((user) => user.id === selectedUser.id) || null;
-		} catch (error) {
-			errorMessage = error.message || 'No fue posible asignar el rol.';
 		} finally {
 			saving = false;
 		}
@@ -233,6 +258,16 @@
 				>
 					{message}
 				</p>{/if}
+			<nav class="flex flex-wrap gap-2" aria-label="Secciones de administración">
+				{#each tabs as [key, label] (key)}<button
+						type="button"
+						class="rounded-lg border border-gray-300/70 bg-white/55 px-3.5 py-2 text-sm font-semibold text-gray-700 hover:bg-white/80"
+						class:border-blue-600={activeTab === key}
+						class:bg-blue-50={activeTab === key}
+						class:text-blue-700={activeTab === key}
+						on:click={() => (activeTab = key)}>{label}</button
+					>{/each}
+			</nav>
 
 			{#if activeTab === 'users'}
 				<section class="glass-3 rounded-xl p-5 sm:p-6">
@@ -250,16 +285,19 @@
 					<div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_12rem_auto]">
 						<input
 							bind:value={searchTerm}
-							class="admin-input"
+							class="focus:border-primary focus:ring-primary/25 block w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-600 shadow-sm focus:outline-none focus:ring-2"
 							placeholder="Buscar por nombre o correo..."
 							aria-label="Buscar usuarios"
-						/><select bind:value={roleFilter} class="admin-input" aria-label="Filtrar por rol"
+						/><select
+							bind:value={roleFilter}
+							class="focus:border-primary focus:ring-primary/25 block w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-600 shadow-sm focus:outline-none focus:ring-2"
+							aria-label="Filtrar por rol"
 							><option value="ALL">Todos los roles</option
 							>{#each data.roles as role (role.id)}<option value={role.id}>{role.name}</option
 								>{/each}</select
 						><button
 							type="button"
-							class="refresh-button"
+							class="rounded-xl bg-gray-100/85 px-3 py-2 text-base font-bold text-gray-600 hover:bg-gray-200"
 							title="Actualizar lista"
 							aria-label="Actualizar lista"
 							on:click={loadAdministration}>⟳</button
@@ -267,48 +305,45 @@
 					</div>
 				</section>
 
-				<section class="glass-3 overflow-x-auto rounded-xl">
-					<table class="admin-table">
+				<section class="glass-3 overflow-x-auto rounded-xl p-3 sm:p-4">
+					<table class="min-w-[1120px] w-full border-collapse text-sm [&_tbody_tr]:border-t [&_tbody_tr]:border-gray-200/70 [&_tbody_tr]:transition-colors [&_tbody_tr:hover]:bg-white/45 [&_td]:px-4 [&_td]:py-4 [&_th]:px-4 [&_th]:py-3">
 						<thead
-							><tr
-								><th>Usuario</th><th>Dependencia</th><th>Rol</th><th>Estado</th><th>Fecha</th><th
-									>Acciones</th
-								></tr
+							><tr class="text-left"><th class="w-[24%]">Usuario</th><th class="w-[14%]">Documento</th><th class="w-[20%]">Dependencia / Área</th><th class="w-[17%]">Rol</th><th>Estado</th><th class="w-[12%]">Fecha</th><th class="w-[13%] text-right">Acciones</th></tr
 							></thead
 						><tbody>
-							{#if loading}<tr
-									><td colspan="6" class="py-12 text-center text-gray-500">Cargando usuarios...</td
-									></tr
-								>
-							{:else if filteredUsers.length === 0}<tr
-									><td colspan="6" class="py-12 text-center text-gray-500"
-										>No se encontraron usuarios.</td
-									></tr
-								>
+							{#if loading}<tr><td colspan="7" class="py-12 text-center text-gray-500">Cargando usuarios...</td></tr>
+							{:else if filteredUsers.length === 0}<tr><td colspan="7" class="py-12 text-center text-gray-500">No se encontraron usuarios.</td></tr>
 							{:else}{#each filteredUsers as user (user.id)}<tr
-										class:selected-row={selectedUser?.id === user.id}
 										><td
 											><button
 												type="button"
 												class="flex items-center gap-3 text-left"
 												on:click={() => openUserModal(user)}
-												><span class="avatar">{user.name.charAt(0).toUpperCase()}</span><span
+												><span
+													class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#3f51f5] text-xs font-bold text-white"
+													>{user.name.charAt(0).toUpperCase()}</span
+												><span
 													><strong class="block text-sm text-gray-900">{user.name}</strong><small
 														class="text-gray-500">{user.email}</small
 													></span
 												></button
 											></td
-										><td>{user.dependency?.name || 'Sin dependencia'}</td><td
+										><td class="text-sm text-gray-700">{user.documentId || 'Sin documento'}</td><td
+											><span class="block">{user.dependency?.name || 'Sin dependencia'}</span><span
+												class="text-xs text-gray-500">{user.area?.name || 'Sin área'}</span
+											></td
+										><td
 											><div class="flex flex-wrap gap-1">
 												{#each user.roleAssignments as assignment (assignment.id)}<span
-														class="role-badge">{assignment.role.name}</span
+														class="inline-flex rounded-full bg-blue-100/85 px-2 py-1 text-xs font-semibold text-blue-700"
+														>{assignment.role.name}</span
 													>{/each}{#if !user.roleAssignments.length}<span
 														class="text-xs text-gray-500">Sin rol</span
 													>{/if}
 											</div></td
 										><td
 											><button
-												class="status-control"
+												class="inline-flex items-center rounded-lg px-1.5 py-1 hover:bg-gray-100/75"
 												type="button"
 												title={user.status === 'ACTIVE' ? 'Desactivar Usuario' : 'Activar Usuario'}
 												aria-label={user.status === 'ACTIVE'
@@ -321,10 +356,21 @@
 												<span
 													class:status-dot-active={user.status === 'ACTIVE'}
 													class:status-dot-disabled={user.status !== 'ACTIVE'}
-													class="status-dot"
+													class="mr-2 h-2 w-2 rounded-full"
 												></span>
-												<span class="status-text">{user.status === 'ACTIVE' ? 'Activo' : user.status}</span>
-												<span class:toggle-on={user.status === 'ACTIVE'} class:toggle-off={user.status !== 'ACTIVE'} class="status-toggle"><span></span></span>
+												<span
+													class="text-sm font-medium"
+													class:text-green-700={user.status === 'ACTIVE'}
+													class:text-gray-600={user.status !== 'ACTIVE'}
+													>{user.status === 'ACTIVE' ? 'Activo' : user.status}</span
+												>
+												<span
+													class:translate-x-4={user.status === 'ACTIVE'}
+													class:translate-x-0={user.status !== 'ACTIVE'}
+													class="ml-2 inline-flex h-5 w-9 items-center rounded-full bg-gray-300 p-0.5 transition-colors"
+													class:bg-green-500={user.status === 'ACTIVE'}
+													><span class="h-4 w-4 rounded-full bg-white shadow"></span></span
+												>
 											</button></td
 										><td class="text-sm text-gray-500"
 											>{user.createdAt
@@ -334,10 +380,10 @@
 											><div class="flex items-center justify-end space-x-2">
 												<button
 													type="button"
-													class="icon-action icon-edit"
+													class="bg-primary inline-flex h-8 w-8 items-center justify-center rounded-full p-2 text-white transition-transform hover:scale-105"
 													title="Editar Usuario"
 													aria-label={`Gestionar ${user.name}`}
-													on:click={() => selectUser(user)}
+													on:click={() => openUserModal(user)}
 													><svg class="h-5 w-5" fill="none" stroke="white" viewBox="0 0 24 24"
 														><path
 															stroke-linecap="round"
@@ -348,7 +394,7 @@
 													></button
 												><button
 													type="button"
-													class="icon-action icon-delete"
+													class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-red-500 p-2 text-white transition-transform hover:scale-105"
 													title="Eliminar Usuario"
 													aria-label={`Eliminar ${user.name}`}
 													on:click={() => deleteUser(user)}
@@ -375,12 +421,12 @@
 						<input
 							required
 							bind:value={roleForm.name}
-							class="admin-input"
+							class="focus:border-primary focus:ring-primary/25 block w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-600 shadow-sm focus:outline-none focus:ring-2"
 							placeholder="Nombre del rol"
 						/><textarea
 							required
 							bind:value={roleForm.description}
-							class="admin-input mt-3"
+							class="focus:border-primary focus:ring-primary/25 mt-3 block w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-600 shadow-sm focus:outline-none focus:ring-2"
 							placeholder="Descripción"
 						></textarea><label class="mt-3 flex items-center gap-2 text-sm"
 							><input type="checkbox" bind:checked={roleForm.critical} /> Rol crítico</label
@@ -419,7 +465,7 @@
 				</section>
 			{:else if activeTab === 'permissions'}<section class="glass-3 overflow-x-auto rounded-xl p-6">
 					<h2 class="mb-4 text-xl font-semibold">Permisos ({data.permissions.length})</h2>
-					<table class="admin-table">
+					<table class="w-full border-collapse text-sm">
 						<thead><tr><th>Código</th><th>Descripción</th><th>Módulo</th></tr></thead><tbody
 							>{#each data.permissions as permission (permission.id)}<tr
 									><td>{permission.code}</td><td>{permission.description}</td><td
@@ -449,7 +495,7 @@
 				</section>
 			{:else if activeTab === 'sessions'}<section class="glass-3 overflow-x-auto rounded-xl p-6">
 					<h2 class="mb-4 text-xl font-semibold">Sesiones activas ({data.sessions.length})</h2>
-					<table class="admin-table">
+					<table class="w-full border-collapse text-sm">
 						<thead
 							><tr><th>Usuario</th><th>Última actividad</th><th>Expira</th><th>IP</th><th></th></tr
 							></thead
@@ -475,7 +521,7 @@
 				</section>
 			{:else}<section class="glass-3 overflow-x-auto rounded-xl p-6">
 					<h2 class="mb-4 text-xl font-semibold">Auditoría ({data.events.length})</h2>
-					<table class="admin-table">
+					<table class="w-full border-collapse text-sm">
 						<thead><tr><th>Fecha</th><th>Acción</th><th>Entidad</th><th>Actor</th></tr></thead
 						><tbody
 							>{#each data.events as event (event.id)}<tr
@@ -492,66 +538,132 @@
 
 {#if showUserModal}
 	<div
-		class="modal-backdrop"
+		class="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/55 p-4 backdrop-blur-[3px]"
 		role="presentation"
 		on:click={(event) => event.currentTarget === event.target && closeUserModal()}
 	>
-		<form class="user-modal glass-3" on:submit|preventDefault={createUser}>
-			<header class="modal-header">
+		<form
+			class="glass-3 w-full max-w-lg overflow-hidden border border-white/60 p-0"
+			on:submit|preventDefault={createUser}
+		>
+			<header class="flex items-center justify-between bg-[#3f51f5] px-5 py-4">
 				<div>
 					<span class="text-xs font-semibold uppercase tracking-wide text-blue-100"
 						>Administración</span
 					>
-					<h2 class="text-lg font-bold text-white">{editingUser ? 'Editar Usuario' : 'Nuevo Usuario'}</h2>
+					<h2 class="text-lg font-bold text-white">
+						{editingUser ? 'Editar Usuario' : 'Nuevo Usuario'}
+					</h2>
 				</div>
-				<button type="button" class="modal-close" aria-label="Cerrar" on:click={closeUserModal}
-					>×</button
+				<button
+					type="button"
+					class="text-2xl leading-none text-white/80"
+					aria-label="Cerrar"
+					on:click={closeUserModal}>×</button
 				>
 			</header>
 			<div class="space-y-4 p-5">
 				<div>
-					<p class="field-label">Avatar del usuario</p>
-					<div class="avatar-upload">
-						<span class="upload-icon">♙</span><strong>Seleccionar imagen</strong><small
-							>o arrastrar aquí</small
-						><small>Máximo 5 MB</small>
+					<p class="block text-xs font-semibold text-gray-700">Avatar del usuario</p>
+					<div
+						class="flex min-h-20 flex-col items-center justify-center gap-0.5 rounded-lg border border-dashed border-slate-300 bg-slate-50/45 text-slate-500"
+					>
+						<span class="text-xl text-slate-600">♙</span><strong class="text-xs text-slate-700"
+							>Seleccionar imagen</strong
+						><small>o arrastrar aquí</small><small>Máximo 5 MB</small>
 					</div>
 				</div>
-				<label class="field-label"
+				<label class="block text-xs font-semibold text-gray-700"
+					>Documento de identidad *<input
+						required
+						bind:value={userForm.documentId}
+						class="focus:border-primary focus:ring-primary/25 mt-1 block w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-600 shadow-sm focus:outline-none focus:ring-2"
+						placeholder="Número de documento"
+					/></label
+				>
+				<label class="block text-xs font-semibold text-gray-700"
 					>Nombre de usuario *<input
 						required
 						bind:value={userForm.name}
-						class="admin-input mt-1"
+						class="focus:border-primary focus:ring-primary/25 mt-1 block w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-600 shadow-sm focus:outline-none focus:ring-2"
 						placeholder="Ingrese el nombre de usuario"
 					/></label
-				><label class="field-label"
+				><label class="block text-xs font-semibold text-gray-700"
 					>Email *<input
 						required
 						type="email"
 						bind:value={userForm.email}
-						class="admin-input mt-1"
+						class="focus:border-primary focus:ring-primary/25 mt-1 block w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-600 shadow-sm focus:outline-none focus:ring-2"
 						placeholder="usuario@ejemplo.com"
 					/></label
-				><label class="field-label"
+				><label class="block text-xs font-semibold text-gray-700"
 					>Contraseña {editingUser ? '(opcional)' : '*'}<input
 						required={!editingUser}
 						minlength="12"
 						type="password"
 						bind:value={userForm.password}
-						class="admin-input mt-1"
+						class="focus:border-primary focus:ring-primary/25 mt-1 block w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-600 shadow-sm focus:outline-none focus:ring-2"
 						placeholder="Mínimo 12 caracteres"
 					/></label
-				><label class="field-label"
-					>Dependencia<select bind:value={userForm.dependencyId} class="admin-input mt-1"
+				><label class="block text-xs font-semibold text-gray-700"
+					>Dependencia<select
+						required={!editingUser}
+						bind:value={userForm.dependencyId}
+						class="focus:border-primary focus:ring-primary/25 mt-1 block w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-600 shadow-sm focus:outline-none focus:ring-2"
 						><option value="">Sin dependencia</option
 						>{#each data.dependencies as dependency (dependency.id)}<option value={dependency.id}
 								>{dependency.name}</option
 							>{/each}</select
 					></label
+				><label class="block text-xs font-semibold text-gray-700"
+					>Área<select
+						required={!editingUser}
+						bind:value={userForm.areaId}
+						class="focus:border-primary focus:ring-primary/25 mt-1 block w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-600 shadow-sm focus:outline-none focus:ring-2"
+						><option value="">Selecciona un área</option
+						>{#each data.areas.filter((area) => !userForm.dependencyId || area.dependencyId === userForm.dependencyId) as area (area.id)}<option
+								value={area.id}>{area.name}</option
+							>{/each}</select
+					></label
+				><label class="block text-xs font-semibold text-gray-700"
+					>Rol inicial<select
+						required={!editingUser}
+						bind:value={userForm.roleId}
+						class="focus:border-primary focus:ring-primary/25 mt-1 block w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-600 shadow-sm focus:outline-none focus:ring-2"
+						><option value="">Sin rol inicial</option>{#each data.roles as role (role.id)}<option
+								value={role.id}>{role.name}</option
+							>{/each}</select
+					></label
 				>
+				{#if userForm.roleId}<label class="block text-xs font-semibold text-gray-700"
+						>Alcance del rol<select
+							bind:value={userForm.scopeType}
+							class="focus:border-primary focus:ring-primary/25 mt-1 block w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-600 shadow-sm focus:outline-none focus:ring-2"
+							><option value="GLOBAL">Global</option><option value="DEPENDENCY">Dependencia</option
+							><option value="PROCESS">Proceso</option><option value="DEPENDENCY_PROCESS"
+								>Dependencia y proceso</option
+							></select
+						></label
+					>
+					{#if userForm.scopeType.includes('PROCESS')}<label
+							class="block text-xs font-semibold text-gray-700"
+							>Proceso<select
+								bind:value={userForm.processId}
+								class="focus:border-primary focus:ring-primary/25 mt-1 block w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-600 shadow-sm focus:outline-none focus:ring-2"
+								required
+								><option value="">Selecciona un proceso</option
+								>{#each data.processes as process (process.id)}<option value={process.id}
+										>{process.name}</option
+									>{/each}</select
+							></label
+						>{/if}
+				{/if}
 			</div>
-			<footer class="modal-footer">
-				<button type="button" class="cancel-button" on:click={closeUserModal}>Cancelar</button
+			<footer class="flex justify-end gap-3 border-t border-gray-300/60 px-5 py-4">
+				<button
+					type="button"
+					class="rounded-lg bg-gray-100/90 px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-200"
+					on:click={closeUserModal}>Cancelar</button
 				><button
 					type="submit"
 					class="bg-primary rounded-lg px-4 py-2 text-sm font-semibold text-white"
@@ -561,245 +673,3 @@
 		</form>
 	</div>
 {/if}
-
-<style>
-	.tab-button {
-		border: 1px solid rgb(209 213 219 / 70%);
-		border-radius: 0.5rem;
-		background: rgb(255 255 255 / 55%);
-		padding: 0.625rem 0.9rem;
-		color: #374151;
-		font-size: 0.875rem;
-		font-weight: 600;
-	}
-	.active-tab {
-		border-color: #2563eb;
-		background: rgb(239 246 255 / 80%);
-		color: #1d4ed8;
-	}
-	.admin-table {
-		width: 100%;
-		border-collapse: collapse;
-		font-size: 0.875rem;
-	}
-	.admin-table th,
-	.admin-table td {
-		border-bottom: 1px solid rgb(209 213 219 / 60%);
-		padding: 0.9rem 1rem;
-		text-align: left;
-		white-space: nowrap;
-	}
-	.admin-table th {
-		background: rgb(248 250 252 / 55%);
-		color: #6b7280;
-		font-size: 0.7rem;
-		text-transform: uppercase;
-	}
-	.selected-row {
-		background: rgb(239 246 255 / 65%);
-	}
-	.avatar {
-		display: inline-flex;
-		height: 2rem;
-		width: 2rem;
-		align-items: center;
-		justify-content: center;
-		border-radius: 999px;
-		background: #3f51f5;
-		color: white;
-		font-size: 0.8rem;
-		font-weight: 700;
-	}
-	.role-badge,
-	.status-badge {
-		display: inline-flex;
-		border-radius: 999px;
-		padding: 0.2rem 0.55rem;
-		font-size: 0.7rem;
-		font-weight: 600;
-	}
-	.role-badge {
-		background: rgb(219 234 254 / 85%);
-		color: #1d4ed8;
-	}
-	.status-dot {
-		margin-right: 0.5rem;
-		height: 0.5rem;
-		width: 0.5rem;
-		border-radius: 999px;
-	}
-	.status-dot-active {
-		background: #4ade80;
-	}
-	.status-dot-disabled {
-		background: #9ca3af;
-	}
-	.status-text {
-		font-size: 0.875rem;
-		font-weight: 500;
-	}
-	.status-text-active {
-		color: #15803d;
-	}
-	.status-text-disabled {
-		color: #4b5563;
-	}
-	.status-control {
-		display: inline-flex;
-		align-items: center;
-		border-radius: 0.5rem;
-		padding: 0.25rem 0.35rem;
-	}
-	.status-control:hover {
-		background: rgb(243 244 246 / 75%);
-	}
-	.status-toggle {
-		position: relative;
-		display: inline-flex;
-		height: 1.25rem;
-		width: 2.25rem;
-		align-items: center;
-		border-radius: 999px;
-		margin-left: 0.55rem;
-		padding: 0.15rem;
-		transition: background-color 150ms ease;
-	}
-	.status-toggle span {
-		display: block;
-		height: 0.9rem;
-		width: 0.9rem;
-		border-radius: 999px;
-		background: white;
-		box-shadow: 0 1px 2px rgb(0 0 0 / 20%);
-		transition: transform 150ms ease;
-	}
-	.toggle-on {
-		background: #22c55e;
-	}
-	.toggle-on span {
-		transform: translateX(1rem);
-	}
-	.toggle-off {
-		background: #cbd5e1;
-	}
-	.icon-action {
-		display: inline-flex;
-		height: 2rem;
-		width: 2rem;
-		align-items: center;
-		justify-content: center;
-		border-radius: 999px;
-		padding: 0.5rem;
-		transition: transform 150ms ease;
-	}
-	.icon-action:hover {
-		transform: scale(1.05);
-	}
-	.icon-edit {
-		background: var(--color-primary);
-	}
-	.icon-delete {
-		background: #ef4444;
-	}
-	.field-label {
-		display: block;
-		color: #374151;
-		font-size: 0.75rem;
-		font-weight: 600;
-	}
-	.admin-input {
-		display: block;
-		width: 100%;
-		border: 1px solid #d1d5db;
-		border-radius: 0.75rem;
-		background: white;
-		padding: 0.5rem 0.75rem;
-		color: #4b5563;
-		font-size: 0.875rem;
-		box-shadow: 0 1px 2px rgb(0 0 0 / 5%);
-	}
-	.admin-input:focus {
-		border-color: var(--color-primary);
-		outline: 2px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
-		outline-offset: 1px;
-	}
-	.refresh-button {
-		border-radius: 0.75rem;
-		background: rgb(243 244 246 / 85%);
-		padding: 0.5rem 0.75rem;
-		color: #4b5563;
-		font-size: 1rem;
-		font-weight: 700;
-	}
-	.refresh-button:hover {
-		background: rgb(229 231 235 / 90%);
-	}
-	.modal-backdrop {
-		position: fixed;
-		inset: 0;
-		z-index: 70;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		background: rgb(15 23 42 / 55%);
-		padding: 1rem;
-		backdrop-filter: blur(3px);
-	}
-	.user-modal {
-		width: min(100%, 31rem);
-		overflow: hidden;
-		border: 1px solid rgb(255 255 255 / 60%);
-		padding: 0;
-	}
-	.modal-header {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		background: #3f51f5;
-		padding: 1rem 1.25rem;
-	}
-	.modal-close {
-		color: rgb(255 255 255 / 80%);
-		font-size: 1.5rem;
-		line-height: 1;
-	}
-	.modal-footer {
-		display: flex;
-		justify-content: flex-end;
-		gap: 0.75rem;
-		border-top: 1px solid rgb(209 213 219 / 60%);
-		padding: 1rem 1.25rem;
-	}
-	.cancel-button {
-		border-radius: 0.5rem;
-		background: rgb(243 244 246 / 90%);
-		padding: 0.5rem 1rem;
-		font-size: 0.8rem;
-		font-weight: 600;
-		color: #4b5563;
-	}
-	.avatar-upload {
-		display: flex;
-		min-height: 5rem;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		gap: 0.15rem;
-		border: 1px dashed #cbd5e1;
-		border-radius: 0.5rem;
-		background: rgb(248 250 252 / 45%);
-		color: #64748b;
-	}
-	.avatar-upload strong {
-		font-size: 0.7rem;
-		color: #334155;
-	}
-	.avatar-upload small {
-		font-size: 0.65rem;
-		font-weight: 400;
-	}
-	.upload-icon {
-		font-size: 1.2rem;
-		color: #475569;
-	}
-</style>
