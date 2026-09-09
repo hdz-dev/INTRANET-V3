@@ -1,0 +1,2143 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Matriz de Riesgos · Alcaldía de Jamundí</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ===== Reset & base ===== */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+h1, h2, h3, h4, p, ul, ol, dl, dd, fieldset { margin: 0; padding: 0; }
+ul { list-style: none; }
+fieldset { border: 0; }
+button { font: inherit; color: inherit; }
+input, select, textarea { font: inherit; color: inherit; }
+img, svg { display: block; max-width: 100%; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ===== Tokens — light (default) ===== */
+:root {
+  --bg: #eef1ec;
+  --bg-raised: #f6f7f4;
+  --surface: #ffffff;
+  --surface-2: #f4f6f3;
+  --ink: #1b2521;
+  --ink-soft: #55625b;
+  --ink-faint: #859083;
+  --line: #d9ded7;
+  --line-strong: #c1c9be;
+
+  --accent: #144d63;
+  --accent-ink: #ffffff;
+  --accent-soft: #e2ecee;
+  --accent-2: #a97527;
+  --accent-2-soft: #f3e7d2;
+
+  --zona-bajo: #2f8f5b;
+  --zona-bajo-soft: #e1f1e7;
+  --zona-moderado: #c99a1e;
+  --zona-moderado-soft: #f8eecd;
+  --zona-alto: #d97a2c;
+  --zona-alto-soft: #fbe6d3;
+  --zona-extremo: #c1382f;
+  --zona-extremo-soft: #f8dcda;
+
+  --danger: #c1382f;
+  --shadow: 0 1px 2px rgba(20, 30, 25, 0.06), 0 8px 24px -12px rgba(20, 30, 25, 0.18);
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 16px;
+
+  --font-display: "Fraunces", "Iowan Old Style", "Georgia", serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12181a;
+    --bg-raised: #17201f;
+    --surface: #1a2422;
+    --surface-2: #202b28;
+    --ink: #ecf1ec;
+    --ink-soft: #aeb9b1;
+    --ink-faint: #798a80;
+    --line: #2b3733;
+    --line-strong: #3c4b45;
+
+    --accent: #6fb3c9;
+    --accent-ink: #0b1f27;
+    --accent-soft: #1c3138;
+    --accent-2: #d9a75a;
+    --accent-2-soft: #33291a;
+
+    --zona-bajo: #4fae7c;
+    --zona-bajo-soft: #17332488;
+    --zona-moderado: #dab74a;
+    --zona-moderado-soft: #3a30178f;
+    --zona-alto: #e79457;
+    --zona-alto-soft: #3a26158f;
+    --zona-extremo: #e2685d;
+    --zona-extremo-soft: #3a1a178f;
+
+    --danger: #e2685d;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 28px -14px rgba(0, 0, 0, 0.6);
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #12181a;
+  --bg-raised: #17201f;
+  --surface: #1a2422;
+  --surface-2: #202b28;
+  --ink: #ecf1ec;
+  --ink-soft: #aeb9b1;
+  --ink-faint: #798a80;
+  --line: #2b3733;
+  --line-strong: #3c4b45;
+
+  --accent: #6fb3c9;
+  --accent-ink: #0b1f27;
+  --accent-soft: #1c3138;
+  --accent-2: #d9a75a;
+  --accent-2-soft: #33291a;
+
+  --zona-bajo: #4fae7c;
+  --zona-bajo-soft: #17332488;
+  --zona-moderado: #dab74a;
+  --zona-moderado-soft: #3a30178f;
+  --zona-alto: #e79457;
+  --zona-alto-soft: #3a26158f;
+  --zona-extremo: #e2685d;
+  --zona-extremo-soft: #3a1a178f;
+
+  --danger: #e2685d;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 28px -14px rgba(0, 0, 0, 0.6);
+}
+
+/* ===== Base ===== */
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+.app { min-height: 100vh; display: flex; flex-direction: column; }
+
+/* ===== Header ===== */
+.appbar {
+  position: sticky; top: 0; z-index: 30;
+  background: var(--accent); color: var(--accent-ink);
+  border-bottom: 1px solid var(--line-strong);
+}
+.appbar-inner {
+  max-width: 1280px; margin: 0 auto; padding: 14px 24px 0;
+  display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px;
+}
+.brand { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.brand-mark {
+  font-family: var(--font-display); font-weight: 600; font-size: 1.5rem;
+  text-wrap: balance; letter-spacing: -0.01em;
+}
+.brand-sub {
+  font-size: 0.78rem; color: color-mix(in srgb, var(--accent-ink) 78%, transparent);
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+.appbar-meta {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 0.78rem; color: color-mix(in srgb, var(--accent-ink) 82%, transparent);
+}
+.save-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 999px;
+  background: color-mix(in srgb, var(--accent-ink) 14%, transparent);
+  font-family: var(--font-mono); font-size: 0.72rem;
+}
+.save-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.save-pill[data-state="saving"] .save-dot { background: var(--accent-2); animation: pulse 1s infinite; }
+.save-pill[data-state="local"] .save-dot { background: var(--zona-moderado); }
+.save-pill[data-state="error"] .save-dot { background: var(--zona-extremo); }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+.tabs {
+  max-width: 1280px; margin: 0 auto; padding: 10px 24px 0;
+  display: flex; gap: 4px; overflow-x: auto;
+}
+.tab-btn {
+  appearance: none; border: 0; background: transparent; cursor: pointer;
+  padding: 10px 16px; border-radius: 8px 8px 0 0;
+  color: color-mix(in srgb, var(--accent-ink) 75%, transparent);
+  font-weight: 500; font-size: 0.9rem; white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.tab-btn:hover { background: color-mix(in srgb, var(--accent-ink) 10%, transparent); }
+.tab-btn[aria-selected="true"] {
+  background: var(--bg); color: var(--accent);
+  border-bottom-color: var(--bg);
+}
+
+/* ===== Main ===== */
+main { flex: 1; }
+.view { max-width: 1280px; margin: 0 auto; padding: 28px 24px 64px; }
+.view-head { margin-bottom: 20px; display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 12px; }
+.view-title { font-family: var(--font-display); font-weight: 600; font-size: 1.5rem; text-wrap: balance; }
+.view-desc { color: var(--ink-soft); font-size: 0.92rem; max-width: 60ch; }
+
+/* ===== Cards / layout ===== */
+.card {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+}
+.card-pad { padding: 20px; }
+.grid { display: grid; gap: 16px; }
+.kpi-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+.kpi {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 16px 18px; display: flex; flex-direction: column; gap: 6px;
+}
+.kpi-label { font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-faint); }
+.kpi-value { font-family: var(--font-display); font-size: 1.9rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.kpi-value small { font-family: var(--font-body); font-size: 0.95rem; color: var(--ink-soft); font-weight: 500; }
+.kpi-sub { font-size: 0.78rem; color: var(--ink-soft); }
+
+.section-title {
+  font-family: var(--font-display); font-weight: 600; font-size: 1.1rem; margin-bottom: 4px;
+}
+.section-note { font-size: 0.82rem; color: var(--ink-soft); margin-bottom: 14px; max-width: 68ch; }
+
+/* ===== Zona pill ===== */
+.zona-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 10px; border-radius: 999px; font-size: 0.76rem; font-weight: 600;
+  letter-spacing: 0.01em; white-space: nowrap;
+}
+.zona-pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.zona-Bajo { background: var(--zona-bajo-soft); color: var(--zona-bajo); }
+.zona-Moderado { background: var(--zona-moderado-soft); color: var(--zona-moderado); }
+.zona-Alto { background: var(--zona-alto-soft); color: var(--zona-alto); }
+.zona-Extremo { background: var(--zona-extremo-soft); color: var(--zona-extremo); }
+
+/* ===== Heatmap ===== */
+.heatmap-wrap { overflow-x: auto; }
+.heatmap { border-collapse: separate; border-spacing: 4px; margin: 4px auto 0; }
+.heatmap th { font-weight: 500; font-size: 0.72rem; color: var(--ink-soft); text-align: center; padding: 4px; }
+.heatmap .axis-label {
+  font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-faint);
+}
+.heatmap td.cell {
+  width: 92px; height: 60px; border-radius: 8px; text-align: center; vertical-align: middle;
+  cursor: pointer; position: relative; border: 1px solid rgba(0,0,0,0.06);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.heatmap td.cell:hover { transform: translateY(-1px); box-shadow: 0 4px 10px -4px rgba(0,0,0,0.25); }
+.heatmap td.cell .n { font-family: var(--font-mono); font-size: 1.05rem; font-weight: 600; }
+.heatmap td.cell .lbl { font-size: 0.62rem; opacity: 0.85; }
+.heatmap td.rowhead { text-align: right; padding-right: 8px; font-size: 0.74rem; color: var(--ink-soft); white-space: nowrap; }
+
+.heat-toggle { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 999px; overflow: hidden; }
+.heat-toggle button {
+  border: 0; background: var(--surface); padding: 6px 14px; cursor: pointer; font-size: 0.82rem;
+}
+.heat-toggle button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+
+/* ===== Buttons ===== */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink);
+  border-radius: 8px; padding: 9px 16px; font-size: 0.86rem; font-weight: 500; cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.05s ease;
+}
+.btn:hover { border-color: var(--accent); }
+.btn:active { transform: translateY(1px); }
+.btn-primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn-primary:hover { filter: brightness(1.06); }
+.btn-ghost { border-color: transparent; background: transparent; }
+.btn-ghost:hover { background: var(--surface-2); border-color: var(--line); }
+.btn-danger { color: var(--danger); border-color: var(--line-strong); }
+.btn-danger:hover { background: var(--zona-extremo-soft); border-color: var(--danger); }
+.btn-sm { padding: 5px 10px; font-size: 0.78rem; border-radius: 6px; }
+.btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+/* ===== Form ===== */
+.form-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 900px) { .form-layout { grid-template-columns: 1fr; } }
+.fieldset {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; margin-bottom: 16px;
+}
+.fieldset legend, .fieldset .legend {
+  font-family: var(--font-display); font-weight: 600; font-size: 1rem; display: flex; align-items: center; gap: 8px;
+}
+.fieldset .legend .num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 50%; background: var(--accent-soft); color: var(--accent);
+  font-family: var(--font-mono); font-size: 0.72rem; font-weight: 600;
+}
+.field-row { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field.full { grid-column: 1 / -1; }
+.field label {
+  font-size: 0.78rem; font-weight: 600; color: var(--ink-soft);
+  display: flex; align-items: center; justify-content: space-between; gap: 6px;
+}
+.field .hint { font-size: 0.72rem; color: var(--ink-faint); font-weight: 400; }
+.field input[type="text"], .field input[type="date"], .field select, .field textarea {
+  border: 1px solid var(--line-strong); background: var(--bg-raised); color: var(--ink);
+  border-radius: 7px; padding: 9px 10px; font-size: 0.88rem; width: 100%;
+}
+.field textarea { min-height: 64px; resize: vertical; font-family: var(--font-body); }
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--accent); background: var(--surface); }
+.field.mono input { font-family: var(--font-mono); }
+.check-group { display: flex; flex-wrap: wrap; gap: 8px; }
+.check-pill {
+  display: inline-flex; align-items: center; gap: 7px;
+  border: 1px solid var(--line-strong); border-radius: 999px; padding: 7px 13px;
+  font-size: 0.83rem; cursor: pointer; background: var(--bg-raised);
+}
+.check-pill:has(input:checked) { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.check-pill input { accent-color: var(--accent); }
+.radio-group { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.preview-card { position: sticky; top: 128px; display: flex; flex-direction: column; gap: 14px; }
+.preview-desc {
+  font-size: 0.86rem; line-height: 1.55; padding: 12px 14px; border-radius: 8px;
+  background: var(--accent-soft); color: var(--ink);
+}
+.preview-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed var(--line); font-size: 0.83rem; }
+.preview-row:last-child { border-bottom: 0; }
+.preview-row .k { color: var(--ink-soft); }
+.preview-row .v { font-family: var(--font-mono); font-weight: 600; }
+.preview-big { display: flex; align-items: baseline; gap: 8px; }
+.preview-big .num { font-family: var(--font-display); font-size: 2.1rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.control-block {
+  border: 1px dashed var(--line-strong); border-radius: 9px; padding: 14px; display: flex; flex-direction: column; gap: 10px;
+  background: var(--bg-raised);
+}
+.control-block-head { display: flex; align-items: center; justify-content: space-between; }
+.control-block-head .tag { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-faint); }
+.control-eff { font-size: 0.78rem; color: var(--ink-soft); }
+.control-eff b { color: var(--accent); font-family: var(--font-mono); }
+
+.error-text { color: var(--danger); font-size: 0.78rem; min-height: 1em; }
+.field.has-error input, .field.has-error select, .field.has-error textarea { border-color: var(--danger); }
+
+/* ===== Table / Matriz ===== */
+.filters-bar {
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px;
+}
+.filters-bar select, .filters-bar input[type="search"] {
+  border: 1px solid var(--line-strong); background: var(--surface); border-radius: 7px; padding: 8px 10px; font-size: 0.83rem;
+}
+.filters-bar input[type="search"] { min-width: 220px; }
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+table.matrix { border-collapse: collapse; width: 100%; min-width: 1700px; font-size: 0.83rem; }
+textarea.segui-input {
+  width: 100%; min-width: 140px; resize: vertical; border: 1px solid var(--line);
+  background: var(--bg-raised); color: var(--ink); border-radius: 6px; padding: 6px 8px;
+  font-family: var(--font-body); font-size: 0.8rem; line-height: 1.35;
+}
+textarea.segui-input:focus { border-color: var(--accent); background: var(--surface); }
+.segui-save-btn { color: var(--accent-2); border-color: var(--accent-2); }
+table.matrix th, table.matrix td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.matrix thead th {
+  position: sticky; top: 0; background: var(--surface-2); font-size: 0.72rem; text-transform: uppercase;
+  letter-spacing: 0.04em; color: var(--ink-soft); z-index: 1; white-space: nowrap;
+}
+table.matrix tbody tr:hover { background: var(--surface-2); }
+table.matrix tbody tr.highlight { animation: flash 1.6s ease; }
+@keyframes flash { 0% { background: var(--accent-2-soft); } 100% { background: transparent; } }
+.code-cell { font-family: var(--font-mono); font-weight: 600; }
+.cell-actions { display: flex; gap: 6px; white-space: nowrap; }
+.muted { color: var(--ink-faint); }
+.empty-state {
+  text-align: center; padding: 56px 20px; color: var(--ink-soft);
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+.empty-state .big { font-family: var(--font-display); font-size: 1.2rem; color: var(--ink); }
+
+/* ===== Methodology ===== */
+.ref-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+table.ref { border-collapse: collapse; width: 100%; font-size: 0.82rem; }
+table.ref th, table.ref td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: left; }
+table.ref thead th { color: var(--ink-soft); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.03em; }
+table.ref td.num { font-family: var(--font-mono); }
+.def-list { display: flex; flex-direction: column; gap: 10px; }
+.def-item dt { font-weight: 600; font-family: var(--font-display); font-size: 0.95rem; }
+.def-item dd { font-size: 0.85rem; color: var(--ink-soft); margin-top: 2px; }
+
+/* ===== Modal ===== */
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(10, 16, 14, 0.45); z-index: 100;
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+.modal {
+  background: var(--surface); border-radius: var(--radius-lg); max-width: 420px; width: 100%;
+  padding: 22px; box-shadow: var(--shadow); border: 1px solid var(--line);
+}
+.modal h3 { font-family: var(--font-display); font-size: 1.1rem; margin-bottom: 8px; }
+.modal p { font-size: 0.88rem; color: var(--ink-soft); margin-bottom: 18px; }
+
+/* ===== Toast ===== */
+.toast-stack { position: fixed; bottom: 20px; right: 20px; z-index: 200; display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+.toast {
+  background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 8px; font-size: 0.83rem;
+  box-shadow: var(--shadow); max-width: 320px;
+}
+.toast.warn { background: var(--zona-alto); }
+.toast.error { background: var(--zona-extremo); }
+
+.banner {
+  display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 9px;
+  background: var(--zona-moderado-soft); color: var(--ink); font-size: 0.83rem; margin-bottom: 16px; border: 1px solid var(--zona-moderado);
+}
+
+footer.app-footer {
+  text-align: center; padding: 22px; font-size: 0.74rem; color: var(--ink-faint);
+}
+
+@media (max-width: 640px) {
+  .view { padding: 20px 14px 48px; }
+  .appbar-inner, .tabs { padding-left: 14px; padding-right: 14px; }
+}
+
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script id="app-data" type="application/json">{"risks": [], "meta": {"entidad": "Alcaldía Municipal de Jamundí", "version": 1}}</script>
+<script>
+/* =========================================================================
+   Matriz de Riesgos · Alcaldía de Jamundí
+   Metodología: Guía para la Administración del Riesgo DAFP V7
+   ========================================================================= */
+(function () {
+  "use strict";
+
+  /* ---------------------------------------------------------------------
+     1. DATOS DE REFERENCIA (DAFP Guía 7)
+     --------------------------------------------------------------------- */
+  var PROBABILIDAD = [
+    { nivel: "Muy Baja", dec: 0.2, rango: "Máximo 2 veces por año" },
+    { nivel: "Baja", dec: 0.4, rango: "Entre 3 y 24 veces por año" },
+    { nivel: "Media", dec: 0.6, rango: "Entre 25 y 500 veces por año" },
+    { nivel: "Alta", dec: 0.8, rango: "Más de 500 y máximo 5.000 veces por año" },
+    { nivel: "Muy Alta", dec: 1.0, rango: "Más de 5.000 veces por año" }
+  ];
+
+  var IMPACTO_ECONOMICO = [
+    { nivel: "Leve", dec: 0.2, criterio: "Afectación menor a 10 SMLMV" },
+    { nivel: "Menor", dec: 0.4, criterio: "Mayor a 10 y menor a 50 SMLMV" },
+    { nivel: "Moderado", dec: 0.6, criterio: "Mayor a 50 y menor a 100 SMLMV" },
+    { nivel: "Mayor", dec: 0.8, criterio: "Mayor a 100 y menor a 500 SMLMV" },
+    { nivel: "Catastrófico", dec: 1.0, criterio: "Mayor a 500 SMLMV" }
+  ];
+
+  var IMPACTO_REPUTACIONAL = [
+    { nivel: "Leve", dec: 0.2, criterio: "Afecta la imagen de alguna área de la entidad" },
+    { nivel: "Menor", dec: 0.4, criterio: "Afecta la imagen interna: alta dirección y/o proveedores" },
+    { nivel: "Moderado", dec: 0.6, criterio: "Afecta la imagen con usuarios de relevancia frente a los objetivos" },
+    { nivel: "Mayor", dec: 0.8, criterio: "Efecto publicitario sostenido a nivel departamental o municipal" },
+    { nivel: "Catastrófico", dec: 1.0, criterio: "Afecta la imagen a nivel nacional con efecto publicitario sostenido" }
+  ];
+
+  var ZONAS = [
+    { zona: "Bajo", max: 0.08, accion: "Controles de rutina." },
+    { zona: "Moderado", max: 0.24, accion: "Controles activos y seguimiento periódico." },
+    { zona: "Alto", max: 0.48, accion: "Planes de tratamiento inmediatos." },
+    { zona: "Extremo", max: 1.0001, accion: "Atención urgente de la alta dirección." }
+  ];
+
+  var CONTROL_TIPO_PCT = { "Preventivo": 0.25, "Detectivo": 0.15, "Correctivo": 0.10 };
+  var CONTROL_MODO_PCT = { "Manual": 0.15, "Automático": 0.25 };
+
+  var TIPOLOGIAS = ["Gestión", "Fiscal", "Seguridad de la Información", "Integridad Pública", "LA/FT"];
+  var TIPOLOGIA_SIGLA = { "Gestión": "GES", "Fiscal": "FIS", "Seguridad de la Información": "SIN", "Integridad Pública": "INP", "LA/FT": "LFT" };
+  var TIPOLOGIA_DEF = {
+    "Gestión": "Eventos que pueden afectar el cumplimiento de los objetivos de un proceso de la entidad.",
+    "Fiscal": "Posibilidad de un efecto dañoso sobre los recursos públicos, los bienes públicos o los intereses patrimoniales de naturaleza pública, a causa de un evento potencial.",
+    "Seguridad de la Información": "Posibilidad de que una amenaza explote una vulnerabilidad y cause pérdida o daño sobre la confidencialidad, integridad o disponibilidad de un activo de información.",
+    "Integridad Pública": "Eventos que, por acción u omisión y mediante el uso indebido del poder, los recursos públicos o la información, buscan obtener un beneficio particular en detrimento de los intereses de la entidad y del Estado.",
+    "LA/FT": "Eventos en los que la entidad puede ser utilizada para dar apariencia de legalidad a activos de origen delictivo, o para canalizar recursos hacia el terrorismo o la proliferación de armas."
+  };
+
+  var FISCAL_EFECTOS = [
+    "Efecto dañoso sobre los recursos públicos",
+    "Efecto dañoso sobre los bienes públicos",
+    "Efecto dañoso sobre los intereses patrimoniales de naturaleza pública"
+  ];
+
+  var AFECTACION_GENERAL = ["Económica", "Reputacional"];
+
+  // Causa inmediata controlada para riesgos de Seguridad de la Información
+  var CAUSA_INMEDIATA_SI = [
+    { key: "confidencialidad", label: "Pérdida de la confidencialidad de la información", attr: "la confidencialidad" },
+    { key: "disponibilidad", label: "Pérdida de la disponibilidad de la información", attr: "la disponibilidad" },
+    { key: "integridad", label: "Pérdida de la integridad de la información", attr: "la integridad" }
+  ];
+
+  var PROCESOS = [
+    { grupo: "Estratégico", nombre: "Direccionamiento Estratégico", sigla: "DE" },
+    { grupo: "Estratégico", nombre: "Gestión de la Información y las Comunicaciones", sigla: "GIC" },
+    { grupo: "Misional", nombre: "Gestión de Servicios de Salud", sigla: "GSS" },
+    { grupo: "Misional", nombre: "Gestión Educativa", sigla: "GED" },
+    { grupo: "Misional", nombre: "Convivencia Ciudadana, Seguridad y Orden Público", sigla: "CSO" },
+    { grupo: "Misional", nombre: "Desarrollo Social Integral y Ambiental en el Territorio", sigla: "DSA" },
+    { grupo: "Apoyo", nombre: "Gestión Financiera", sigla: "GFI" },
+    { grupo: "Apoyo", nombre: "Gestión Catastral", sigla: "GCA" },
+    { grupo: "Apoyo", nombre: "Gestión Administrativa", sigla: "GAD" },
+    { grupo: "Apoyo", nombre: "Gestión del Talento Humano", sigla: "GTH" },
+    { grupo: "Apoyo", nombre: "Gestión Jurídica", sigla: "GJU" },
+    { grupo: "Apoyo", nombre: "Gestión Estadística", sigla: "GST" },
+    { grupo: "Evaluación", nombre: "Control Interno", sigla: "CIN" }
+  ];
+
+  var CONTROL_TIPOS = ["Preventivo", "Detectivo", "Correctivo"];
+  var CONTROL_MODOS = ["Manual", "Automático"];
+
+  var SEGUIMIENTO_PERIODOS = [
+    { key: "t1", label: "Seguimiento primer trimestre", sub: "Corte 31 de marzo" },
+    { key: "t2", label: "Seguimiento segundo trimestre", sub: "Corte 30 de junio" },
+    { key: "t3", label: "Seguimiento tercer trimestre", sub: "Corte 30 de septiembre" },
+    { key: "t4", label: "Seguimiento cuarto trimestre", sub: "Corte 31 de diciembre" }
+  ];
+
+  // Contraseña compartida para acciones destructivas/de estado (eliminar, inactivar).
+  // Nota: esto es solo una confirmación adicional en el navegador, no seguridad real
+  // (el código es visible para cualquiera que abra la página) — evita borrados por
+  // accidente, no reemplaza el control de acceso del backend.
+  var ACTION_PASSWORD = "Jamundi2026*";
+
+  /* ---------------------------------------------------------------------
+     2. ESTADO
+     --------------------------------------------------------------------- */
+  var state = null;
+  var ui = {
+    tab: "dashboard",
+    heatMode: "inherente",
+    filterProceso: "",
+    filterTipologia: "",
+    filterZona: "",
+    search: "",
+    editingId: null,
+    draftControles: [],
+    filterEstado: "",
+    passwordGate: null, /* { action: 'delete'|'inactivate', riskId, error, fromForm } */
+    toasts: [],
+    persist: "unknown", /* unknown | ok | saving | local | error */
+    authPending: false,
+    authChecking: false,
+    authError: ""
+  };
+
+  function loadInitialState() {
+    var node = document.getElementById("app-data");
+    var parsed = null;
+    try { parsed = JSON.parse(node.textContent); } catch (e) { parsed = null; }
+    if (!parsed || typeof parsed !== "object") {
+      parsed = { risks: [], meta: { entidad: "Alcaldía Municipal de Jamundí", version: 1 } };
+    }
+    if (!Array.isArray(parsed.risks)) parsed.risks = [];
+    if (!parsed.meta) parsed.meta = { entidad: "Alcaldía Municipal de Jamundí", version: 1 };
+    return parsed;
+  }
+
+  /* ---------------------------------------------------------------------
+     3. UTILIDADES
+     --------------------------------------------------------------------- */
+  function esc(s) {
+    if (s === null || s === undefined) return "";
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function pct(dec) { return Math.round(dec * 100) + "%"; }
+
+  function fmtDec(dec) {
+    if (dec === null || dec === undefined || isNaN(dec)) return "—";
+    return dec.toFixed(3).replace(/0+$/, "").replace(/\.$/, ".0");
+  }
+
+  function uid() { return "r" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
+  function zonaDe(dec) {
+    // Redondeo defensivo: productos como 0.2 x 0.4 caen en 0.08000000000000002
+    // por representación binaria de punto flotante y deben tratarse como 0.08.
+    var rounded = Math.round(dec * 1e6) / 1e6;
+    for (var i = 0; i < ZONAS.length; i++) {
+      if (rounded <= ZONAS[i].max) return ZONAS[i].zona;
+    }
+    return "Extremo";
+  }
+
+  function accionDe(zona) {
+    for (var i = 0; i < ZONAS.length; i++) if (ZONAS[i].zona === zona) return ZONAS[i].accion;
+    return "";
+  }
+
+  function findByNivel(tabla, nivel) {
+    for (var i = 0; i < tabla.length; i++) if (tabla[i].nivel === nivel) return tabla[i];
+    return null;
+  }
+
+  function seguimientoVal(r, key) {
+    return (r.seguimiento && r.seguimiento[key]) || "";
+  }
+
+  function procesoBy(nombre) {
+    for (var i = 0; i < PROCESOS.length; i++) if (PROCESOS[i].nombre === nombre) return PROCESOS[i];
+    return null;
+  }
+
+  function todayISO() {
+    var d = new Date();
+    var m = String(d.getMonth() + 1).padStart(2, "0");
+    var day = String(d.getDate()).padStart(2, "0");
+    return d.getFullYear() + "-" + m + "-" + day;
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return "—";
+    var parts = iso.split("-");
+    if (parts.length !== 3) return iso;
+    var meses = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+    var mi = parseInt(parts[1], 10) - 1;
+    return parts[2] + " " + (meses[mi] || parts[1]) + " " + parts[0];
+  }
+
+  /* ---------------------------------------------------------------------
+     4. MOTOR DE CÁLCULO — Guía DAFP V7
+     --------------------------------------------------------------------- */
+
+  // Calcula probabilidad, impacto y riesgo inherente a partir de los campos crudos del formulario/riesgo
+  function calcInherente(r) {
+    var probEntry = findByNivel(PROBABILIDAD, r.frecuencia_nivel);
+    var probDec = probEntry ? probEntry.dec : 0;
+
+    var impDec = 0;
+    var impFuente = [];
+    if (r.tipologia === "Fiscal") {
+      var eco = findByNivel(IMPACTO_ECONOMICO, r.criterio_economico_nivel);
+      impDec = eco ? eco.dec : 0;
+      impFuente = ["Cuantía patrimonial (SMLMV)"];
+    } else {
+      var afect = r.tipo_afectacion || [];
+      var candidatos = [];
+      if (afect.indexOf("Económica") !== -1) {
+        var e = findByNivel(IMPACTO_ECONOMICO, r.criterio_economico_nivel);
+        if (e) { candidatos.push(e.dec); impFuente.push("Económico"); }
+      }
+      if (afect.indexOf("Reputacional") !== -1) {
+        var rp = findByNivel(IMPACTO_REPUTACIONAL, r.criterio_reputacional_nivel);
+        if (rp) { candidatos.push(rp.dec); impFuente.push("Reputacional"); }
+      }
+      impDec = candidatos.length ? Math.max.apply(null, candidatos) : 0;
+    }
+
+    var riesgo = probDec * impDec;
+    return {
+      probDec: probDec,
+      impDec: impDec,
+      impFuente: impFuente.join(" · "),
+      riesgo: riesgo,
+      zona: probDec && impDec ? zonaDe(riesgo) : null
+    };
+  }
+
+  // Efectividad de un control individual
+  function efectividadControl(c) {
+    var t = CONTROL_TIPO_PCT[c.tipo_control] || 0;
+    var m = CONTROL_MODO_PCT[c.implementacion] || 0;
+    return t + m;
+  }
+
+  // Calcula el riesgo residual a partir del inherente y la lista de controles
+  function calcResidual(inherente, controles) {
+    var sumaProb = 0, sumaImp = 0;
+    (controles || []).forEach(function (c) {
+      var ef = efectividadControl(c);
+      if (c.tipo_control === "Preventivo" || c.tipo_control === "Detectivo") sumaProb += ef;
+      else if (c.tipo_control === "Correctivo") sumaImp += ef;
+    });
+    var probRes = inherente.probDec * Math.max(0, 1 - sumaProb);
+    var impRes = inherente.impDec * Math.max(0, 1 - sumaImp);
+    var riesgoRes = probRes * impRes;
+    return {
+      probRes: probRes,
+      impRes: impRes,
+      riesgoRes: riesgoRes,
+      zona: inherente.probDec && inherente.impDec ? zonaDe(riesgoRes) : null,
+      sumaProb: sumaProb,
+      sumaImp: sumaImp
+    };
+  }
+
+  // Construye el texto de "tipo de afectación" para la descripción automática
+  function textoAfectacion(r) {
+    if (r.tipologia === "Fiscal") {
+      var efectos = r.efectos_fiscales || [];
+      if (!efectos.length) return "un efecto dañoso sobre los recursos, bienes o intereses patrimoniales de naturaleza pública";
+      var lista = efectos.map(function (e) { return e.replace(/^Efecto dañoso sobre /i, ""); });
+      return "un efecto dañoso sobre " + joinY(lista);
+    }
+    var afect = r.tipo_afectacion || [];
+    if (afect.length === 2) return "una afectación económica y reputacional";
+    if (afect.indexOf("Económica") !== -1) return "una afectación económica";
+    if (afect.indexOf("Reputacional") !== -1) return "una afectación reputacional";
+    return "una afectación";
+  }
+
+  function joinY(arr) {
+    if (arr.length <= 1) return arr.join("");
+    return arr.slice(0, -1).join(", ") + " y " + arr[arr.length - 1];
+  }
+
+  // Texto de causa inmediata: para Seguridad de la Información se compone a partir
+  // de la selección controlada (confidencialidad/disponibilidad/integridad);
+  // para las demás tipologías es el texto libre que escribe el usuario.
+  function causaInmediataTexto(r) {
+    if (r.tipologia === "Seguridad de la Información") {
+      var sel = r.causa_inmediata_si || [];
+      if (!sel.length) return "…";
+      var attrs = sel.map(function (k) {
+        var found = CAUSA_INMEDIATA_SI.filter(function (c) { return c.key === k; })[0];
+        return found ? found.attr : k;
+      });
+      return "pérdida de " + joinY(attrs) + " de la información";
+    }
+    return (r.causa_inmediata || "…").trim();
+  }
+
+  function textoDescripcion(r) {
+    var afect = textoAfectacion(r);
+    var causaI = causaInmediataTexto(r);
+    var causaR = (r.causa_raiz || "…").trim();
+    return "Probabilidad de " + afect + " por " + lower1(causaI) + ", debido a " + lower1(causaR) + ".";
+  }
+
+  function lower1(s) {
+    if (!s) return s;
+    return s.charAt(0).toLowerCase() + s.slice(1);
+  }
+
+  // Genera un código único a partir del proceso y la tipología
+  function generarCodigo(procesoNombre, tipologia) {
+    var p = procesoBy(procesoNombre);
+    var pSigla = p ? p.sigla : "GEN";
+    var tSigla = TIPOLOGIA_SIGLA[tipologia] || "GEN";
+    var base = "R-" + pSigla + "-" + tSigla + "-";
+    var max = 0;
+    state.risks.forEach(function (r) {
+      if (r.codigo && r.codigo.indexOf(base) === 0) {
+        var n = parseInt(r.codigo.slice(base.length), 10);
+        if (!isNaN(n) && n > max) max = n;
+      }
+    });
+    return base + String(max + 1).padStart(3, "0");
+  }
+
+  function codigoDisponible(codigo, exceptId) {
+    return !state.risks.some(function (r) { return r.codigo === codigo && r.id !== exceptId; });
+  }
+
+  /* ---------------------------------------------------------------------
+     5. PERSISTENCIA
+     --------------------------------------------------------------------- */
+  var LOCAL_KEY = "jamundi-matriz-riesgos-v1";
+  var API_URL = "api.php"; // backend PHP opcional, relativo a este archivo (ver api.php)
+  var API_KEY_STORAGE = "jamundi-api-key";
+  var backendMode = "checking"; // "artifact" | "http" | "local" | "checking"
+  var apiKey = "";
+  try { apiKey = localStorage.getItem(API_KEY_STORAGE) || ""; } catch (e) {}
+
+  function normalizeState(data) {
+    if (!data || typeof data !== "object") data = {};
+    if (!Array.isArray(data.risks)) data.risks = [];
+    if (!data.meta) data.meta = { entidad: "Alcaldía Municipal de Jamundí", version: 1 };
+    if (typeof data._rev !== "number") data._rev = 0;
+    return data;
+  }
+
+  function fetchWithTimeout(url, opts, ms) {
+    if (typeof fetch !== "function") return Promise.reject(new Error("fetch_unavailable"));
+    var controller = ("AbortController" in window) ? new AbortController() : null;
+    var timer = controller ? setTimeout(function () { controller.abort(); }, ms || 8000) : null;
+    var finalOpts = Object.assign({}, opts || {});
+    if (controller) finalOpts.signal = controller.signal;
+    return fetch(url, finalOpts).finally(function () { if (timer) clearTimeout(timer); });
+  }
+
+  function buildFullDocument() {
+    var styleTxt = document.getElementById("app-style").textContent;
+    var scriptTxt = document.getElementById("app-script").textContent;
+    var dataTxt = JSON.stringify(state);
+    return [
+      "<!doctype html>",
+      '<html lang="es">',
+      "<head>",
+      '<meta charset="utf-8">',
+      '<meta name="viewport" content="width=device-width, initial-scale=1">',
+      "<title>Matriz de Riesgos · Jamundí</title>",
+      '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">',
+      '<style id="app-style">' + styleTxt + "</style>",
+      "</head>",
+      "<body>",
+      '<div id="root"></div>',
+      '<script id="app-data" type="application/json">' + dataTxt.replace(/</g, "\\u003c") + "</" + "script>",
+      '<script id="app-script">' + scriptTxt + "</" + "script>",
+      "</body>",
+      "</html>"
+    ].join("\n");
+  }
+
+  function setPersistState(s) {
+    ui.persist = s;
+    renderSavePill();
+  }
+
+  function persist(afterOk) {
+    setPersistState("saving");
+    if (backendMode === "http") { httpSave(afterOk); return; }
+    if (backendMode === "local") {
+      localStorage.setItem(LOCAL_KEY, JSON.stringify(state));
+      setPersistState("local");
+      if (afterOk) afterOk();
+      return;
+    }
+    // backendMode === "artifact" (o aún sin determinar: se comporta como antes)
+    getArtifactCap().then(function (cap) {
+      if (!cap) {
+        localStorage.setItem(LOCAL_KEY, JSON.stringify(state));
+        setPersistState("local");
+        if (afterOk) afterOk();
+        return;
+      }
+      cap.publish(buildFullDocument()).then(function () {
+        // La vista se recargará con la nueva versión.
+      }).catch(function (err) {
+        if (err && (err.code === "not_writer" || err.code === "not_granted" || err.code === "capability_disabled" || err.code === "not_declared")) {
+          localStorage.setItem(LOCAL_KEY, JSON.stringify(state));
+          setPersistState("local");
+          if (afterOk) afterOk();
+        } else if (err && err.code === "conflict") {
+          // Otra vista publicó primero; el navegador recargará a esa versión.
+        } else {
+          localStorage.setItem(LOCAL_KEY, JSON.stringify(state));
+          setPersistState("error");
+          pushToast("No se pudo sincronizar. Los cambios quedaron guardados solo en este navegador.", "error");
+          if (afterOk) afterOk();
+        }
+      });
+    });
+  }
+
+  /* ---- Backend HTTP propio (api.php + data/riesgos.json) ---- */
+
+  function httpHeaders(json) {
+    var h = { "X-Api-Key": apiKey };
+    if (json) h["Content-Type"] = "application/json";
+    return h;
+  }
+
+  function httpLoad() {
+    backendMode = "checking";
+    return fetchWithTimeout(API_URL, { headers: httpHeaders(false) }, 8000)
+      .then(function (res) {
+        if (res.status === 401) { backendMode = "http"; return { __auth: true }; }
+        if (!res.ok) throw new Error("http_status_" + res.status);
+        return res.text().then(function (txt) {
+          var parsed;
+          try { parsed = JSON.parse(txt); } catch (e) { throw new Error("bad_json"); }
+          return parsed;
+        });
+      })
+      .then(function (data) {
+        if (data && data.__auth) {
+          ui.authPending = true;
+          ui.authChecking = false;
+          ui.authError = apiKey ? "Contraseña incorrecta. Intenta de nuevo." : "";
+          renderApp();
+          return;
+        }
+        backendMode = "http";
+        state = normalizeState(data);
+        ui.authPending = false;
+        setPersistState("ok");
+        renderApp();
+      })
+      .catch(function () {
+        // Sin backend PHP disponible (no desplegado, sin red, o error del servidor): usar respaldo local.
+        backendMode = "local";
+        tryRestoreLocal();
+        setPersistState("local");
+      });
+  }
+
+  function httpSave(afterOk) {
+    var payload = Object.assign({}, state);
+    fetchWithTimeout(API_URL, { method: "POST", headers: httpHeaders(true), body: JSON.stringify(payload) }, 8000)
+      .then(function (res) {
+        if (res.status === 401) {
+          apiKey = "";
+          try { localStorage.removeItem(API_KEY_STORAGE); } catch (e) {}
+          ui.authPending = true;
+          ui.authError = "La sesión de acceso venció o la contraseña cambió. Ingrésala de nuevo para guardar.";
+          setPersistState("error");
+          renderApp();
+          throw new Error("unauthorized");
+        }
+        if (res.status === 409) {
+          return res.json().then(function (body) { var e = new Error("conflict"); e.conflict = true; e.current = body && body.current; throw e; });
+        }
+        if (!res.ok) throw new Error("http_status_" + res.status);
+        return res.json();
+      })
+      .then(function (saved) {
+        if (!saved) return;
+        state = normalizeState(saved);
+        setPersistState("ok");
+        if (afterOk) afterOk();
+        renderApp();
+      })
+      .catch(function (err) {
+        if (err && err.conflict) {
+          state = normalizeState(err.current);
+          pushToast("Otra persona guardó cambios primero; se actualizó la matriz con la versión más reciente. Vuelve a intentar tu cambio si aún aplica.", "warn");
+          setPersistState("ok");
+          renderApp();
+          return;
+        }
+        if (err && err.message === "unauthorized") return;
+        localStorage.setItem(LOCAL_KEY, JSON.stringify(state));
+        setPersistState("error");
+        pushToast("No se pudo guardar en el servidor. Los cambios quedaron solo en este navegador.", "error");
+        if (afterOk) afterOk();
+      });
+  }
+
+  function renderAuthGate() {
+    return (
+      '<div class="view" style="max-width:440px;padding-top:14vh;">' +
+        '<div class="card card-pad">' +
+          '<div class="section-title">Acceso protegido</div>' +
+          '<p class="section-note">Esta matriz de riesgos requiere la contraseña configurada en el servidor para verla y editarla.</p>' +
+          (ui.authError ? '<p class="error-text" style="margin-bottom:8px;">' + esc(ui.authError) + "</p>" : "") +
+          '<form id="auth-form">' +
+            '<div class="field" style="margin-bottom:14px;">' +
+              '<label>Contraseña</label>' +
+              '<input type="password" id="auth-password" autocomplete="current-password" autofocus>' +
+            "</div>" +
+            '<button type="submit" class="btn btn-primary" style="width:100%;">Entrar</button>' +
+          "</form>" +
+        "</div>" +
+      "</div>"
+    );
+  }
+
+  function bindAuthGateEvents() {
+    var form = document.getElementById("auth-form");
+    if (!form) return;
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var pass = document.getElementById("auth-password").value;
+      if (!pass) return;
+      apiKey = pass;
+      try { localStorage.setItem(API_KEY_STORAGE, apiKey); } catch (err) {}
+      ui.authError = "";
+      ui.authChecking = true;
+      httpLoad();
+    });
+  }
+
+  var artifactCapPromise = null;
+  function getArtifactCap() {
+    if (artifactCapPromise) return artifactCapPromise;
+    if (!window.claude || typeof window.claude.use !== "function") {
+      artifactCapPromise = Promise.resolve(null);
+      return artifactCapPromise;
+    }
+    artifactCapPromise = window.claude.use("artifact").catch(function () { return null; });
+    return artifactCapPromise;
+  }
+
+  var downloadsCapPromise = null;
+  function getDownloadsCap() {
+    if (downloadsCapPromise) return downloadsCapPromise;
+    if (!window.claude || typeof window.claude.use !== "function") {
+      downloadsCapPromise = Promise.resolve(null);
+      return downloadsCapPromise;
+    }
+    downloadsCapPromise = window.claude.use("downloads").catch(function () { return null; });
+    return downloadsCapPromise;
+  }
+
+  function tryRestoreLocal() {
+    // Sin backend compartido disponible: si hay una copia local más reciente, usarla.
+    var raw = null;
+    try { raw = localStorage.getItem(LOCAL_KEY); } catch (e) {}
+    if (!raw) return;
+    try {
+      var local = JSON.parse(raw);
+      if (local && Array.isArray(local.risks) && local.risks.length && state.risks.length === 0) {
+        state = local;
+        renderApp();
+      }
+    } catch (e) { /* ignore */ }
+  }
+
+  /* ---------------------------------------------------------------------
+     6. TOASTS
+     --------------------------------------------------------------------- */
+  function pushToast(msg, kind) {
+    var id = uid();
+    ui.toasts.push({ id: id, msg: msg, kind: kind || "info" });
+    renderToasts();
+    setTimeout(function () {
+      ui.toasts = ui.toasts.filter(function (t) { return t.id !== id; });
+      renderToasts();
+    }, 4200);
+  }
+
+  function renderToasts() {
+    var el = document.getElementById("toast-stack");
+    if (!el) return;
+    el.innerHTML = ui.toasts.map(function (t) {
+      return '<div class="toast ' + (t.kind === "info" ? "" : t.kind) + '">' + esc(t.msg) + "</div>";
+    }).join("");
+  }
+
+  function renderSavePill() {
+    var el = document.getElementById("save-pill");
+    if (!el) return;
+    var label = { unknown: "Sincronizando…", ok: "Guardado", saving: "Guardando…", local: "Guardado en este navegador", error: "Error al guardar" }[ui.persist] || "";
+    el.setAttribute("data-state", ui.persist);
+    el.innerHTML = '<span class="save-dot"></span>' + esc(label);
+  }
+
+  /* ---------------------------------------------------------------------
+     7. RENDER — layout raíz
+     --------------------------------------------------------------------- */
+  function renderApp() {
+    var root = document.getElementById("root");
+    if (ui.authPending) {
+      root.innerHTML = renderAuthGate();
+      bindAuthGateEvents();
+      return;
+    }
+    root.innerHTML =
+      '<div class="app">' +
+        renderHeader() +
+        "<main>" + renderView() + "</main>" +
+        '<footer class="app-footer">Sistema de Gestión del Riesgo · Alcaldía Municipal de Jamundí · Metodología DAFP — Guía para la Administración del Riesgo V7</footer>' +
+      "</div>" +
+      '<div id="toast-stack" class="toast-stack"></div>' +
+      renderModal();
+    bindGlobalEvents();
+    renderToasts();
+    renderSavePill();
+    if (ui.tab === "form") bindFormEvents();
+    if (ui.tab === "matriz") bindMatrizEvents();
+    if (ui.tab === "dashboard") bindDashboardEvents();
+  }
+
+  function renderHeader() {
+    var tabs = [
+      ["dashboard", "Panorama"],
+      ["form", ui.editingId ? "Editar riesgo" : "Nuevo riesgo"],
+      ["matriz", "Matriz (" + state.risks.length + ")"],
+      ["guia", "Guía metodológica"]
+    ];
+    return (
+      '<header class="appbar">' +
+        '<div class="appbar-inner">' +
+          '<div class="brand">' +
+            '<div class="brand-mark">🛡️ Matriz de Riesgos</div>' +
+            '<div class="brand-sub">Alcaldía Municipal de Jamundí · Control Interno</div>' +
+          "</div>" +
+          '<div class="appbar-meta">' +
+            '<span id="save-pill" class="save-pill" data-state="' + ui.persist + '"></span>' +
+          "</div>" +
+        "</div>" +
+        '<nav class="tabs" role="tablist">' +
+          tabs.map(function (t) {
+            return '<button class="tab-btn" role="tab" data-tab="' + t[0] + '" aria-selected="' + (ui.tab === t[0]) + '">' + esc(t[1]) + "</button>";
+          }).join("") +
+        "</nav>" +
+      "</header>"
+    );
+  }
+
+  function renderView() {
+    if (ui.tab === "dashboard") return renderDashboard();
+    if (ui.tab === "form") return renderFormView();
+    if (ui.tab === "matriz") return renderMatrizView();
+    if (ui.tab === "guia") return renderGuiaView();
+    return "";
+  }
+
+  /* ---------------------------------------------------------------------
+     8. DASHBOARD
+     --------------------------------------------------------------------- */
+  function renderDashboard() {
+    var risks = state.risks;
+    var withCalc = risks.map(withCalculos);
+    var extremosInh = withCalc.filter(function (r) { return r._inh.zona === "Extremo"; }).length;
+    var altosInh = withCalc.filter(function (r) { return r._inh.zona === "Alto"; }).length;
+    var extremosRes = withCalc.filter(function (r) { return r._res.zona === "Extremo"; }).length;
+    var porTipologia = {};
+    TIPOLOGIAS.forEach(function (t) { porTipologia[t] = 0; });
+    withCalc.forEach(function (r) { porTipologia[r.tipologia] = (porTipologia[r.tipologia] || 0) + 1; });
+
+    if (!risks.length) {
+      return (
+        '<div class="view">' +
+          '<div class="view-head"><div><h1 class="view-title">Panorama de riesgos</h1>' +
+          '<p class="view-desc">Aún no hay riesgos registrados en la matriz.</p></div></div>' +
+          '<div class="card empty-state">' +
+            '<div class="big">Comienza registrando el primer riesgo</div>' +
+            '<p>Usa la pestaña «Nuevo riesgo» para capturar la identificación, el análisis de probabilidad e impacto y los controles, siguiendo la Guía DAFP V7.</p>' +
+            '<button class="btn btn-primary" data-goto="form">Registrar primer riesgo</button>' +
+          "</div>" +
+        "</div>"
+      );
+    }
+
+    return (
+      '<div class="view">' +
+        '<div class="view-head"><div><h1 class="view-title">Panorama de riesgos</h1>' +
+        '<p class="view-desc">' + risks.length + " riesgo" + (risks.length === 1 ? "" : "s") + ' registrados. Vista consolidada del riesgo inherente y residual.</p></div>' +
+        '<button class="btn btn-primary" data-goto="form">+ Nuevo riesgo</button>' +
+        "</div>" +
+
+        '<div class="grid kpi-grid" style="margin-bottom:20px;">' +
+          kpi("Riesgos totales", risks.length, "") +
+          kpi("Zona extrema (inherente)", extremosInh, extremosInh ? "Requieren atención de la alta dirección" : "Sin riesgos en zona extrema") +
+          kpi("Zona alta (inherente)", altosInh, "") +
+          kpi("Zona extrema (residual)", extremosRes, extremosRes ? "Tras controles, aún en zona extrema" : "Controles llevan la zona extrema a niveles menores") +
+        "</div>" +
+
+        '<div class="card card-pad" style="margin-bottom:20px;">' +
+          '<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px;">' +
+            '<div><div class="section-title">Mapa de calor</div><div class="section-note" style="margin-bottom:0;">Probabilidad × impacto — clic en una celda para filtrar la matriz.</div></div>' +
+            '<div class="heat-toggle">' +
+              '<button data-heat="inherente" aria-pressed="' + (ui.heatMode === "inherente") + '">Inherente</button>' +
+              '<button data-heat="residual" aria-pressed="' + (ui.heatMode === "residual") + '">Residual</button>' +
+            "</div>" +
+          "</div>" +
+          renderHeatmap(withCalc) +
+        "</div>" +
+
+        '<div class="card card-pad">' +
+          '<div class="section-title">Riesgos por tipología</div>' +
+          '<div class="section-note" style="margin-bottom:12px;">Distribución según la clasificación DAFP.</div>' +
+          '<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));">' +
+            TIPOLOGIAS.map(function (t) {
+              return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border:1px solid var(--line);border-radius:8px;">' +
+                '<span style="font-size:0.86rem;">' + esc(t) + "</span>" +
+                '<span style="font-family:var(--font-mono);font-weight:600;">' + (porTipologia[t] || 0) + "</span>" +
+              "</div>";
+            }).join("") +
+          "</div>" +
+        "</div>" +
+      "</div>"
+    );
+  }
+
+  function kpi(label, value, sub) {
+    return (
+      '<div class="kpi"><div class="kpi-label">' + esc(label) + '</div>' +
+      '<div class="kpi-value">' + value + "</div>" +
+      (sub ? '<div class="kpi-sub">' + esc(sub) + "</div>" : "") +
+      "</div>"
+    );
+  }
+
+  function renderHeatmap(withCalc) {
+    var probOrder = ["Muy Alta", "Alta", "Media", "Baja", "Muy Baja"];
+    var impOrder = ["Leve", "Menor", "Moderado", "Mayor", "Catastrófico"];
+    var key = ui.heatMode === "inherente" ? "_inh" : "_res";
+
+    var grid = {};
+    probOrder.forEach(function (p) { grid[p] = {}; impOrder.forEach(function (i) { grid[p][i] = []; }); });
+
+    withCalc.forEach(function (r) {
+      var c = r[key];
+      if (!c.probDec || !c.impDec) return;
+      var pLevel = findLevelByDec(PROBABILIDAD, c.probDec);
+      var iLevel = findImpactLevelByDec(c.impDec);
+      if (pLevel && iLevel && grid[pLevel] && grid[pLevel][iLevel]) grid[pLevel][iLevel].push(r);
+    });
+
+    var html = '<div class="heatmap-wrap"><table class="heatmap"><thead><tr><th></th><th></th>' +
+      '<th colspan="5" class="axis-label">Impacto →</th></tr><tr><th></th><th></th>' +
+      impOrder.map(function (i) { return "<th>" + esc(i) + "</th>"; }).join("") +
+      "</tr></thead><tbody>";
+
+    probOrder.forEach(function (p, idx) {
+      html += "<tr>";
+      if (idx === 0) html += '<td class="axis-label" rowspan="' + probOrder.length + '" style="writing-mode:vertical-rl;text-align:center;transform:rotate(180deg);">Probabilidad ↑</td>';
+      html += '<td class="rowhead">' + esc(p) + "</td>";
+      impOrder.forEach(function (i) {
+        var probDec = findByNivel(PROBABILIDAD, p).dec;
+        var impDec = impactDecByLevel(i);
+        var zona = zonaDe(probDec * impDec);
+        var items = grid[p][i];
+        html += '<td class="cell zona-' + zona + '" style="background:var(--zona-' + zona.toLowerCase() + '-soft);color:var(--zona-' + zona.toLowerCase() + ');" data-heat-cell data-prob="' + esc(p) + '" data-imp="' + esc(i) + '" title="Zona ' + zona + '">' +
+          '<div class="n">' + items.length + "</div>" +
+          '<div class="lbl">' + zona + "</div>" +
+        "</td>";
+      });
+      html += "</tr>";
+    });
+    html += "</tbody></table></div>";
+    return html;
+  }
+
+  function findLevelByDec(tabla, dec) {
+    for (var i = 0; i < tabla.length; i++) if (Math.abs(tabla[i].dec - dec) < 0.0001) return tabla[i].nivel;
+    return null;
+  }
+  function impactDecByLevel(nivel) {
+    var e = findByNivel(IMPACTO_ECONOMICO, nivel);
+    return e ? e.dec : 0;
+  }
+  function findImpactLevelByDec(dec) {
+    for (var i = 0; i < IMPACTO_ECONOMICO.length; i++) if (Math.abs(IMPACTO_ECONOMICO[i].dec - dec) < 0.0001) return IMPACTO_ECONOMICO[i].nivel;
+    return null;
+  }
+
+  function withCalculos(r) {
+    var inh = calcInherente(r);
+    var res = calcResidual(inh, r.controles);
+    var copy = Object.assign({}, r);
+    copy._inh = inh;
+    copy._res = res;
+    return copy;
+  }
+
+  function bindDashboardEvents() {
+    document.querySelectorAll("[data-heat]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        ui.heatMode = btn.getAttribute("data-heat");
+        renderApp();
+      });
+    });
+    document.querySelectorAll("[data-heat-cell]").forEach(function (td) {
+      td.addEventListener("click", function () {
+        ui.filterZona = "";
+        ui.tab = "matriz";
+        renderApp();
+      });
+    });
+    var gotoBtn = document.querySelector("[data-goto='form']");
+    if (gotoBtn) gotoBtn.addEventListener("click", function () { startNewRisk(); });
+  }
+
+  /* ---------------------------------------------------------------------
+     9. FORMULARIO — Nuevo / Editar riesgo
+     --------------------------------------------------------------------- */
+  var draft = null; // objeto de trabajo del formulario
+
+  function blankRisk() {
+    return {
+      id: null,
+      codigo: "",
+      codigo_auto: true,
+      fecha_identificacion: todayISO(),
+      proceso: "",
+      subproceso: "",
+      responsable: "",
+      tipologia: "",
+      tipo_afectacion: [],
+      efectos_fiscales: [],
+      activo_informacion: "",
+      causa_inmediata: "",
+      causa_inmediata_si: [],
+      causa_raiz: "",
+      descripcion_manual: null,
+      frecuencia_nivel: "",
+      criterio_economico_nivel: "",
+      criterio_reputacional_nivel: "",
+      controles: [],
+      estado: "Activo",
+      seguimiento: { t1: "", t2: "", t3: "", t4: "" },
+      creado_en: new Date().toISOString(),
+      actualizado_en: new Date().toISOString()
+    };
+  }
+
+  function startNewRisk() {
+    ui.editingId = null;
+    draft = blankRisk();
+    ui.tab = "form";
+    renderApp();
+  }
+
+  function startEditRisk(id) {
+    var r = state.risks.find(function (x) { return x.id === id; });
+    if (!r) return;
+    ui.editingId = id;
+    draft = JSON.parse(JSON.stringify(r));
+    ui.tab = "form";
+    renderApp();
+  }
+
+  function renderFormView() {
+    if (!draft) draft = blankRisk();
+    var inh = calcInherente(draft);
+    var res = calcResidual(inh, draft.controles);
+    var isFiscal = draft.tipologia === "Fiscal";
+    var codigoSugerido = draft.proceso && draft.tipologia ? generarCodigo(draft.proceso, draft.tipologia) : "";
+
+    return (
+      '<div class="view">' +
+        '<div class="view-head"><div>' +
+          '<h1 class="view-title">' + (ui.editingId ? "Editar riesgo" : "Nuevo riesgo") + "</h1>" +
+          '<p class="view-desc">Completa cada bloque siguiendo la Guía DAFP V7. Los campos con cálculo automático se actualizan mientras escribes.</p>' +
+        "</div></div>" +
+
+        '<form id="risk-form" novalidate>' +
+        '<div class="form-layout">' +
+          '<div>' +
+
+            fieldset(1, "Identificación del riesgo", (
+              row([
+                field("Código de riesgo", '<div style="display:flex;gap:8px;">' +
+                  '<input type="text" id="f-codigo" class="mono" value="' + esc(draft.codigo || codigoSugerido) + '" placeholder="' + esc(codigoSugerido || "R-PROC-TIP-001") + '">' +
+                  '</div>', "Único por riesgo. Se sugiere automáticamente a partir del proceso y la tipología; puedes ajustarlo.", true),
+                field("Fecha de identificación", '<input type="date" id="f-fecha" value="' + esc(draft.fecha_identificacion) + '">', "")
+              ]) +
+              row([
+                field("Proceso o área de origen", selectProcesos(draft.proceso), "Tomado del mapa de procesos de la Alcaldía de Jamundí.", true),
+                field("Subproceso / dependencia específica", '<input type="text" id="f-subproceso" value="' + esc(draft.subproceso) + '" placeholder="p. ej. Tesorería, Cobro coactivo…">', "")
+              ]) +
+              row([
+                field("Responsable del riesgo", '<input type="text" id="f-responsable" value="' + esc(draft.responsable) + '" placeholder="Cargo del líder del proceso">', "Mejora sugerida: todo riesgo debe tener un dueño identificable.")
+              ])
+            )) +
+
+            fieldset(2, "Tipología y tipo de afectación", (
+              row([
+                field("Tipología de riesgo", selectSimple("f-tipologia", TIPOLOGIAS, draft.tipologia), TIPOLOGIA_DEF[draft.tipologia] || "Selecciona una tipología para ver su definición.", true)
+              ]) +
+              (draft.tipologia === "Seguridad de la Información" ? row([
+                field("Activo de información", '<input type="text" id="f-activo-informacion" value="' + esc(draft.activo_informacion) + '" placeholder="p. ej. Base de datos de historias clínicas, servidor de correo…">', "Solo para riesgos de Seguridad de la Información.", true)
+              ]) : "") +
+              '<div id="afectacion-block">' + renderAfectacionBlock(draft) + "</div>"
+            )) +
+
+            fieldset(3, "Causa inmediata y causa raíz", (
+              row([
+                draft.tipologia === "Seguridad de la Información" ? renderCausaInmediataSI(draft) :
+                  field("Causa inmediata (por…)", '<textarea id="f-causa-inmediata" placeholder="Evento o situación directa que puede generar el riesgo">' + esc(draft.causa_inmediata) + "</textarea>", "", true),
+                field("Causa raíz (debido a…)", '<textarea id="f-causa-raiz" placeholder="Origen estructural o de fondo de la causa inmediata">' + esc(draft.causa_raiz) + "</textarea>", "", true)
+              ]) +
+              '<div class="field full">' +
+                '<label>Descripción del riesgo <span class="hint">Concatenación automática — desmarca para editar manualmente</span></label>' +
+                '<label class="check-pill" style="width:fit-content;margin-bottom:6px;"><input type="checkbox" id="f-desc-manual" ' + (draft.descripcion_manual !== null ? "checked" : "") + "> Editar manualmente</label>" +
+                '<textarea id="f-descripcion" ' + (draft.descripcion_manual === null ? "readonly" : "") + ">" + esc(draft.descripcion_manual !== null ? draft.descripcion_manual : textoDescripcion(draft)) + "</textarea>" +
+              "</div>"
+            )) +
+
+            fieldset(4, "Cálculo de la probabilidad (Tabla 4, Guía DAFP V7)", (
+              row([
+                field("Frecuencia de la actividad", selectFrecuencia(draft.frecuencia_nivel), "", true)
+              ]) +
+              calcRow([
+                ["Nivel de probabilidad", inh.probDec ? findLevelName(PROBABILIDAD, draft.frecuencia_nivel) : "—"],
+                ["Probabilidad (decimal)", inh.probDec ? fmtDec(inh.probDec) : "—"]
+              ])
+            )) +
+
+            fieldset(5, "Cálculo del impacto (Tabla 5, Guía DAFP V7)", renderImpactoBlock(draft, inh)) +
+
+            fieldset(6, "Riesgo inherente", calcRow([
+              ["Probabilidad × impacto", inh.riesgo ? fmtDec(inh.riesgo) : "—"],
+              ["Calificación", inh.riesgo ? pct(inh.riesgo) : "—"],
+              ["Zona de riesgo", inh.zona ? '<span class="zona-pill zona-' + inh.zona + '">' + inh.zona + "</span>" : "—"]
+            ])) +
+
+            fieldset(7, "Controles", renderControlesBlock(draft)) +
+
+            fieldset(8, "Riesgo residual (tras controles)", calcRow([
+              ["Probabilidad residual", res.probRes ? fmtDec(res.probRes) : "—"],
+              ["Impacto residual", res.impRes ? fmtDec(res.impRes) : "—"],
+              ["Calificación residual", res.riesgoRes ? pct(res.riesgoRes) : "—"],
+              ["Zona residual", res.zona ? '<span class="zona-pill zona-' + res.zona + '">' + res.zona + "</span>" : "—"]
+            ])) +
+
+            '<div class="btn-row" style="margin-top:8px;">' +
+              '<button type="submit" class="btn btn-primary">' + (ui.editingId ? "Guardar cambios" : "Registrar riesgo") + "</button>" +
+              '<button type="button" class="btn btn-ghost" data-cancel-form>Cancelar</button>' +
+              (ui.editingId ? '<div class="btn-row" style="margin-left:auto;">' +
+                (draft.estado === "Inactivo" ?
+                  '<button type="button" class="btn btn-ghost" data-reactivate-from-form>Reactivar</button>' :
+                  '<button type="button" class="btn btn-ghost" data-inactivate-from-form>Inactivar</button>') +
+                '<button type="button" class="btn btn-danger" data-delete-from-form>Eliminar riesgo</button>' +
+              "</div>" : "") +
+            "</div>" +
+          "</div>" +
+
+          '<aside class="preview-card">' +
+            '<div class="card card-pad">' +
+              '<div class="section-title">Vista previa</div>' +
+              '<div class="preview-desc" id="preview-desc">' + esc(draft.descripcion_manual !== null ? draft.descripcion_manual : textoDescripcion(draft)) + "</div>" +
+              '<div class="preview-row"><span class="k">Código</span><span class="v">' + esc(draft.codigo || codigoSugerido || "—") + "</span></div>" +
+              '<div class="preview-row"><span class="k">Tipología</span><span class="v">' + esc(draft.tipologia || "—") + "</span></div>" +
+              '<div class="preview-row"><span class="k">Riesgo inherente</span><span class="v">' + (inh.zona ? inh.zona : "—") + "</span></div>" +
+              '<div class="preview-row"><span class="k">Riesgo residual</span><span class="v">' + (res.zona ? res.zona : "—") + "</span></div>" +
+              '<div class="preview-row"><span class="k">Controles</span><span class="v">' + draft.controles.length + "</span></div>" +
+            "</div>" +
+          "</aside>" +
+        "</div>" +
+        "</form>" +
+      "</div>"
+    );
+  }
+
+  function findLevelName(tabla, nivel) {
+    var f = findByNivel(tabla, nivel);
+    return f ? f.nivel : "—";
+  }
+
+  function fieldset(n, title, inner) {
+    return '<fieldset class="fieldset"><div class="legend"><span class="num">' + n + '</span>' + esc(title) + "</div>" + inner + "</fieldset>";
+  }
+  function row(fields) { return '<div class="field-row">' + fields.join("") + "</div>"; }
+  function field(label, control, hint, full) {
+    return '<div class="field' + (full ? " full" : "") + '"><label>' + esc(label) + (hint ? '<span class="hint">' + esc(hint) + "</span>" : "") + "</label>" + control + "</div>";
+  }
+  function calcRow(pairs) {
+    return '<div class="field-row">' + pairs.map(function (p) {
+      return '<div class="preview-row" style="border:none;"><span class="k">' + esc(p[0]) + '</span><span class="v" style="font-family:var(--font-mono);">' + p[1] + "</span></div>";
+    }).join("") + "</div>";
+  }
+
+  function selectProcesos(selected) {
+    var grupos = {};
+    PROCESOS.forEach(function (p) { (grupos[p.grupo] = grupos[p.grupo] || []).push(p); });
+    var html = '<select id="f-proceso"><option value="">Selecciona un proceso…</option>';
+    Object.keys(grupos).forEach(function (g) {
+      html += '<optgroup label="' + esc(g) + '">';
+      grupos[g].forEach(function (p) {
+        html += '<option value="' + esc(p.nombre) + '" ' + (selected === p.nombre ? "selected" : "") + ">" + esc(p.nombre) + "</option>";
+      });
+      html += "</optgroup>";
+    });
+    html += "</select>";
+    return html;
+  }
+
+  function selectSimple(id, options, selected, placeholder) {
+    var html = '<select id="' + id + '"><option value="">' + esc(placeholder || "Selecciona…") + "</option>";
+    options.forEach(function (o) { html += '<option value="' + esc(o) + '" ' + (selected === o ? "selected" : "") + ">" + esc(o) + "</option>"; });
+    html += "</select>";
+    return html;
+  }
+
+  function selectFrecuencia(selected) {
+    var html = '<select id="f-frecuencia"><option value="">Selecciona la frecuencia…</option>';
+    PROBABILIDAD.forEach(function (p) {
+      html += '<option value="' + esc(p.nivel) + '" ' + (selected === p.nivel ? "selected" : "") + ">" + esc(p.rango) + " — " + p.nivel + " (" + pct(p.dec) + ")</option>";
+    });
+    html += "</select>";
+    return html;
+  }
+
+  function selectImpacto(id, tabla, selected) {
+    var html = '<select id="' + id + '"><option value="">Selecciona el criterio…</option>';
+    tabla.forEach(function (t) {
+      html += '<option value="' + esc(t.nivel) + '" ' + (selected === t.nivel ? "selected" : "") + ">" + esc(t.criterio) + " — " + t.nivel + " (" + pct(t.dec) + ")</option>";
+    });
+    html += "</select>";
+    return html;
+  }
+
+  function renderAfectacionBlock(r) {
+    if (r.tipologia === "Fiscal") {
+      return (
+        '<div class="field full">' +
+          '<label>Tipo de afectación (riesgo fiscal)<span class="hint">Selecciona uno o varios efectos</span></label>' +
+          '<div class="check-group" id="f-efectos-fiscales">' +
+            FISCAL_EFECTOS.map(function (e) {
+              return '<label class="check-pill"><input type="checkbox" value="' + esc(e) + '" ' + ((r.efectos_fiscales || []).indexOf(e) !== -1 ? "checked" : "") + ">" + esc(e) + "</label>";
+            }).join("") +
+          "</div>" +
+        "</div>"
+      );
+    }
+    return (
+      '<div class="field full">' +
+        '<label>Tipo de afectación<span class="hint">Económica, reputacional o ambas</span></label>' +
+        '<div class="check-group" id="f-tipo-afectacion">' +
+          AFECTACION_GENERAL.map(function (a) {
+            return '<label class="check-pill"><input type="checkbox" value="' + esc(a) + '" ' + ((r.tipo_afectacion || []).indexOf(a) !== -1 ? "checked" : "") + ">" + esc(a) + "</label>";
+          }).join("") +
+        "</div>" +
+      "</div>"
+    );
+  }
+
+  // Causa inmediata controlada para riesgos de Seguridad de la Información:
+  // pérdida de confidencialidad, disponibilidad y/o integridad (una, dos o las tres).
+  function renderCausaInmediataSI(r) {
+    return (
+      '<div class="field full">' +
+        '<label>Causa inmediata (por…)<span class="hint">Selecciona una, dos o las tres</span></label>' +
+        '<div class="check-group" id="f-causa-inmediata-si">' +
+          CAUSA_INMEDIATA_SI.map(function (c) {
+            return '<label class="check-pill"><input type="checkbox" value="' + esc(c.key) + '" ' + ((r.causa_inmediata_si || []).indexOf(c.key) !== -1 ? "checked" : "") + ">" + esc(c.label) + "</label>";
+          }).join("") +
+        "</div>" +
+      "</div>"
+    );
+  }
+
+  function renderImpactoBlock(r, inh) {
+    var html = "";
+    var afect = r.tipo_afectacion || [];
+    var showEco = r.tipologia === "Fiscal" || afect.indexOf("Económica") !== -1;
+    var showRep = r.tipologia !== "Fiscal" && afect.indexOf("Reputacional") !== -1;
+    if (!showEco && !showRep) {
+      html += '<p class="section-note">Selecciona primero la tipología y el tipo de afectación en el bloque 2.</p>';
+      return html;
+    }
+    var fields = [];
+    if (showEco) fields.push(field(r.tipologia === "Fiscal" ? "Cuantía del efecto dañoso (SMLMV)" : "Criterio de impacto económico", selectImpacto("f-impacto-economico", IMPACTO_ECONOMICO, r.criterio_economico_nivel), "", true));
+    if (showRep) fields.push(field("Criterio de impacto reputacional", selectImpacto("f-impacto-reputacional", IMPACTO_REPUTACIONAL, r.criterio_reputacional_nivel), "", true));
+    html += row(fields);
+    if (showEco && showRep) html += '<p class="section-note">Cuando aplican ambos criterios, la Guía V7 toma el mayor nivel de impacto entre el económico y el reputacional.</p>';
+    html += calcRow([
+      ["Nivel de impacto aplicado", inh.impDec ? pct(inh.impDec) : "—"],
+      ["Fuente", inh.impFuente || "—"]
+    ]);
+    return html;
+  }
+
+  function renderControlesBlock(r) {
+    var html = '<div id="controles-list">';
+    if (!r.controles.length) {
+      html += '<p class="section-note">Aún no se han asociado controles a este riesgo.</p>';
+    } else {
+      r.controles.forEach(function (c, idx) {
+        var ef = efectividadControl(c);
+        html += (
+          '<div class="control-block">' +
+            '<div class="control-block-head"><span class="tag">Control #' + (idx + 1) + "</span>" +
+              '<button type="button" class="btn btn-sm btn-danger" data-remove-control="' + idx + '">Quitar</button>' +
+            "</div>" +
+            '<div class="field-row">' +
+              field("a) Responsable y frecuencia", '<input type="text" data-control-field="responsable_frecuencia" data-idx="' + idx + '" value="' + esc(c.responsable_frecuencia) + '" placeholder="Cargo responsable · frecuencia de ejecución">', "") +
+              field("b) Acción y complemento", '<input type="text" data-control-field="accion_complemento" data-idx="' + idx + '" value="' + esc(c.accion_complemento) + '" placeholder="Qué hace el control y con qué evidencia">', "") +
+              field("c) Desviación y registro", '<input type="text" data-control-field="desviacion_registro" data-idx="' + idx + '" value="' + esc(c.desviacion_registro) + '" placeholder="Qué se hace ante una desviación y dónde queda registrado">', "") +
+            "</div>" +
+            '<div class="field-row">' +
+              field("Tipo de control", selectSimple("__tipo_" + idx, CONTROL_TIPOS, c.tipo_control, "Selecciona…").replace('id="__tipo_' + idx + '"', 'data-control-field="tipo_control" data-idx="' + idx + '"'), "") +
+              field("Implementación", selectSimple("__modo_" + idx, CONTROL_MODOS, c.implementacion, "Selecciona…").replace('id="__modo_' + idx + '"', 'data-control-field="implementacion" data-idx="' + idx + '"'), "") +
+            "</div>" +
+            (c.tipo_control && c.implementacion ? '<div class="control-eff">Efectividad de este control: <b>' + pct(ef) + "</b> — reduce " + (c.tipo_control === "Correctivo" ? "el impacto" : "la probabilidad") + "</div>" : "") +
+          "</div>"
+        );
+      });
+    }
+    html += "</div>";
+    html += '<button type="button" class="btn btn-ghost" id="add-control" style="width:fit-content;">+ Agregar control</button>';
+    return html;
+  }
+
+  function collectFormIntoDraft() {
+    draft.codigo = val("f-codigo");
+    draft.fecha_identificacion = val("f-fecha");
+    draft.proceso = val("f-proceso");
+    draft.subproceso = val("f-subproceso");
+    draft.responsable = val("f-responsable");
+    draft.tipologia = val("f-tipologia");
+    var afEl = document.getElementById("f-tipo-afectacion");
+    if (afEl) draft.tipo_afectacion = Array.prototype.slice.call(afEl.querySelectorAll("input:checked")).map(function (i) { return i.value; });
+    var efEl = document.getElementById("f-efectos-fiscales");
+    if (efEl) draft.efectos_fiscales = Array.prototype.slice.call(efEl.querySelectorAll("input:checked")).map(function (i) { return i.value; });
+    draft.activo_informacion = val("f-activo-informacion");
+    draft.causa_inmediata = val("f-causa-inmediata");
+    var ciSiEl = document.getElementById("f-causa-inmediata-si");
+    if (ciSiEl) draft.causa_inmediata_si = Array.prototype.slice.call(ciSiEl.querySelectorAll("input:checked")).map(function (i) { return i.value; });
+    draft.causa_raiz = val("f-causa-raiz");
+    var manualBox = document.getElementById("f-desc-manual");
+    if (manualBox && manualBox.checked) draft.descripcion_manual = val("f-descripcion");
+    else draft.descripcion_manual = null;
+    draft.frecuencia_nivel = val("f-frecuencia");
+    draft.criterio_economico_nivel = val("f-impacto-economico");
+    draft.criterio_reputacional_nivel = val("f-impacto-reputacional");
+  }
+
+  function val(id) {
+    var el = document.getElementById(id);
+    return el ? el.value.trim ? el.value.trim() : el.value : "";
+  }
+
+  function bindFormEvents() {
+    var form = document.getElementById("risk-form");
+    if (!form) return;
+
+    // Cualquier cambio en el formulario recalcula y vuelve a pintar la vista previa (sin perder foco de más de lo necesario)
+    form.addEventListener("change", function (e) {
+      collectFormIntoDraft();
+      renderApp();
+      focusAfterRender(e.target);
+    });
+    form.addEventListener("input", function (e) {
+      if (e.target.tagName === "TEXTAREA" && e.target.id !== "f-descripcion") {
+        collectFormIntoDraft();
+        updatePreviewOnly();
+      }
+    });
+
+    var addControlBtn = document.getElementById("add-control");
+    if (addControlBtn) addControlBtn.addEventListener("click", function () {
+      collectFormIntoDraft();
+      draft.controles.push({ responsable_frecuencia: "", accion_complemento: "", desviacion_registro: "", tipo_control: "", implementacion: "" });
+      renderApp();
+    });
+
+    document.querySelectorAll("[data-remove-control]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        collectFormIntoDraft();
+        var idx = parseInt(btn.getAttribute("data-remove-control"), 10);
+        draft.controles.splice(idx, 1);
+        renderApp();
+      });
+    });
+
+    document.querySelectorAll("[data-control-field]").forEach(function (elx) {
+      elx.addEventListener("change", function () {
+        var idx = parseInt(elx.getAttribute("data-idx"), 10);
+        var fieldName = elx.getAttribute("data-control-field");
+        collectFormIntoDraft();
+        draft.controles[idx][fieldName] = elx.value;
+        renderApp();
+      });
+    });
+
+    var cancelBtn = document.querySelector("[data-cancel-form]");
+    if (cancelBtn) cancelBtn.addEventListener("click", function () {
+      draft = null;
+      ui.editingId = null;
+      ui.tab = "matriz";
+      renderApp();
+    });
+
+    var deleteBtn = document.querySelector("[data-delete-from-form]");
+    if (deleteBtn) deleteBtn.addEventListener("click", function () {
+      ui.passwordGate = { action: "delete", riskId: ui.editingId, error: "" };
+      renderApp();
+    });
+    var inactivateBtn = document.querySelector("[data-inactivate-from-form]");
+    if (inactivateBtn) inactivateBtn.addEventListener("click", function () {
+      ui.passwordGate = { action: "inactivate", riskId: ui.editingId, error: "" };
+      renderApp();
+    });
+    var reactivateBtn = document.querySelector("[data-reactivate-from-form]");
+    if (reactivateBtn) reactivateBtn.addEventListener("click", function () {
+      if (draft) draft.estado = "Activo";
+      reactivateRisk(ui.editingId);
+    });
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      submitForm();
+    });
+  }
+
+  function updatePreviewOnly() {
+    var descEl = document.getElementById("preview-desc");
+    if (descEl) descEl.textContent = draft.descripcion_manual !== null ? draft.descripcion_manual : textoDescripcion(draft);
+    var descArea = document.getElementById("f-descripcion");
+    if (descArea && draft.descripcion_manual === null) descArea.value = textoDescripcion(draft);
+  }
+
+  function focusAfterRender() { /* el flujo de re-render completo hace perder el foco; aceptado dado el tamaño del formulario */ }
+
+  function validateDraft() {
+    var errors = [];
+    if (!draft.codigo) errors.push("El código de riesgo es obligatorio.");
+    else if (!codigoDisponible(draft.codigo, draft.id)) errors.push("Ya existe un riesgo con el código " + draft.codigo + ".");
+    if (!draft.proceso) errors.push("Selecciona el proceso o área de origen.");
+    if (!draft.tipologia) errors.push("Selecciona la tipología de riesgo.");
+    if (draft.tipologia === "Fiscal" && !(draft.efectos_fiscales || []).length) errors.push("Selecciona al menos un efecto dañoso para el riesgo fiscal.");
+    if (draft.tipologia !== "Fiscal" && !(draft.tipo_afectacion || []).length) errors.push("Selecciona el tipo de afectación.");
+    if (draft.tipologia === "Seguridad de la Información") {
+      if (!draft.activo_informacion) errors.push("Indica el activo de información.");
+      if (!(draft.causa_inmediata_si || []).length) errors.push("Selecciona al menos una causa inmediata (confidencialidad, disponibilidad o integridad).");
+    } else if (!draft.causa_inmediata) {
+      errors.push("Describe la causa inmediata.");
+    }
+    if (!draft.causa_raiz) errors.push("Describe la causa raíz.");
+    if (!draft.frecuencia_nivel) errors.push("Selecciona la frecuencia para calcular la probabilidad.");
+    var afect = draft.tipo_afectacion || [];
+    if (draft.tipologia === "Fiscal" && !draft.criterio_economico_nivel) errors.push("Selecciona la cuantía del efecto dañoso.");
+    if (draft.tipologia !== "Fiscal") {
+      if (afect.indexOf("Económica") !== -1 && !draft.criterio_economico_nivel) errors.push("Selecciona el criterio de impacto económico.");
+      if (afect.indexOf("Reputacional") !== -1 && !draft.criterio_reputacional_nivel) errors.push("Selecciona el criterio de impacto reputacional.");
+    }
+    draft.controles.forEach(function (c, i) {
+      if (!c.tipo_control || !c.implementacion) errors.push("Completa el tipo y la implementación del control #" + (i + 1) + ".");
+    });
+    return errors;
+  }
+
+  function submitForm() {
+    collectFormIntoDraft();
+    var errors = validateDraft();
+    if (errors.length) {
+      pushToast(errors[0] + (errors.length > 1 ? " (+" + (errors.length - 1) + " más)" : ""), "error");
+      return;
+    }
+    draft.actualizado_en = new Date().toISOString();
+    if (ui.editingId) {
+      var idx = state.risks.findIndex(function (r) { return r.id === ui.editingId; });
+      if (idx !== -1) state.risks[idx] = draft;
+    } else {
+      draft.id = uid();
+      draft.creado_en = draft.actualizado_en;
+      state.risks.push(draft);
+    }
+    var savedId = draft.id;
+    try { sessionStorage.setItem("jamundi-last-tab", JSON.stringify({ tab: "matriz", highlight: savedId })); } catch (e) {}
+    ui.editingId = null;
+    draft = null;
+    ui.tab = "matriz";
+    pushToast("Riesgo guardado correctamente.", "info");
+    persist();
+    renderApp();
+  }
+
+  /* ---------------------------------------------------------------------
+     10. MATRIZ
+     --------------------------------------------------------------------- */
+  function renderMatrizView() {
+    var rows = state.risks.map(withCalculos);
+
+    if (ui.filterProceso) rows = rows.filter(function (r) { return r.proceso === ui.filterProceso; });
+    if (ui.filterTipologia) rows = rows.filter(function (r) { return r.tipologia === ui.filterTipologia; });
+    if (ui.filterZona) rows = rows.filter(function (r) { return r._inh.zona === ui.filterZona || r._res.zona === ui.filterZona; });
+    if (ui.filterEstado) rows = rows.filter(function (r) { return r.estado === ui.filterEstado; });
+    if (ui.search) {
+      var q = ui.search.toLowerCase();
+      rows = rows.filter(function (r) {
+        return (r.codigo || "").toLowerCase().indexOf(q) !== -1 ||
+          causaInmediataTexto(r).toLowerCase().indexOf(q) !== -1 ||
+          (r.causa_raiz || "").toLowerCase().indexOf(q) !== -1 ||
+          (r.activo_informacion || "").toLowerCase().indexOf(q) !== -1 ||
+          (r.proceso || "").toLowerCase().indexOf(q) !== -1;
+      });
+    }
+
+    var highlightId = null;
+    try {
+      var stash = JSON.parse(sessionStorage.getItem("jamundi-last-tab") || "null");
+      if (stash && stash.highlight) { highlightId = stash.highlight; sessionStorage.removeItem("jamundi-last-tab"); }
+    } catch (e) {}
+
+    return (
+      '<div class="view">' +
+        '<div class="view-head"><div>' +
+          '<h1 class="view-title">Matriz de riesgos</h1>' +
+          '<p class="view-desc">Listado completo con riesgo inherente, controles y riesgo residual.</p>' +
+        "</div>" +
+        '<div class="btn-row">' +
+          '<button class="btn btn-ghost" id="export-csv" hidden>⬇ Descargar CSV</button>' +
+          '<button class="btn btn-primary" data-goto="form">+ Nuevo riesgo</button>' +
+        "</div></div>" +
+
+        '<div class="filters-bar">' +
+          '<select id="filter-proceso"><option value="">Todos los procesos</option>' +
+            PROCESOS.map(function (p) { return '<option value="' + esc(p.nombre) + '" ' + (ui.filterProceso === p.nombre ? "selected" : "") + ">" + esc(p.nombre) + "</option>"; }).join("") +
+          "</select>" +
+          '<select id="filter-tipologia"><option value="">Todas las tipologías</option>' +
+            TIPOLOGIAS.map(function (t) { return '<option value="' + esc(t) + '" ' + (ui.filterTipologia === t ? "selected" : "") + ">" + esc(t) + "</option>"; }).join("") +
+          "</select>" +
+          '<select id="filter-zona"><option value="">Cualquier zona</option>' +
+            ZONAS.map(function (z) { return '<option value="' + esc(z.zona) + '" ' + (ui.filterZona === z.zona ? "selected" : "") + ">Zona " + esc(z.zona) + "</option>"; }).join("") +
+          "</select>" +
+          '<select id="filter-estado"><option value="">Activos e inactivos</option>' +
+            '<option value="Activo" ' + (ui.filterEstado === "Activo" ? "selected" : "") + '>Solo activos</option>' +
+            '<option value="Inactivo" ' + (ui.filterEstado === "Inactivo" ? "selected" : "") + '>Solo inactivos</option>' +
+          "</select>" +
+          '<input type="search" id="filter-search" placeholder="Buscar por código, causa o proceso…" value="' + esc(ui.search) + '">' +
+          (ui.filterProceso || ui.filterTipologia || ui.filterZona || ui.filterEstado || ui.search ? '<button class="btn btn-ghost btn-sm" id="clear-filters">Limpiar filtros</button>' : "") +
+        "</div>" +
+
+        (rows.length ? renderMatrizTable(rows, highlightId) : (
+          '<div class="card empty-state">' +
+            '<div class="big">Sin resultados</div>' +
+            '<p>Ningún riesgo coincide con los filtros aplicados.</p>' +
+          "</div>"
+        )) +
+      "</div>"
+    );
+  }
+
+  // Columna única de "Control": concatena responsable/frecuencia, acción/complemento,
+  // desviación/registro, tipo e implementación de cada control asociado al riesgo.
+  function controlSummaryHtml(controles) {
+    if (!controles || !controles.length) return '<span class="muted">Sin controles asociados</span>';
+    var multi = controles.length > 1;
+    return controles.map(function (c, i) {
+      var partes = [];
+      if (c.responsable_frecuencia) partes.push("<strong>a)</strong> " + esc(c.responsable_frecuencia));
+      if (c.accion_complemento) partes.push("<strong>b)</strong> " + esc(c.accion_complemento));
+      if (c.desviacion_registro) partes.push("<strong>c)</strong> " + esc(c.desviacion_registro));
+      var tipoModo = [];
+      if (c.tipo_control) tipoModo.push(esc(c.tipo_control));
+      if (c.implementacion) tipoModo.push(esc(c.implementacion));
+      var linea = partes.length ? partes.join(" · ") : '<span class="muted">Sin detalle</span>';
+      var meta = tipoModo.length ? '<div class="muted" style="font-size:0.72rem;margin-top:2px;">' + tipoModo.join(" — ") + "</div>" : "";
+      return '<div style="' + (multi ? "margin-bottom:7px;padding-bottom:6px;" + (i < controles.length - 1 ? "border-bottom:1px dashed var(--line);" : "") : "") + '">' +
+        (multi ? '<span class="muted" style="font-size:0.7rem;">Control ' + (i + 1) + "</span><br>" : "") +
+        linea + meta +
+      "</div>";
+    }).join("");
+  }
+
+  function renderMatrizTable(rows, highlightId) {
+    return (
+      '<div class="table-wrap"><table class="matrix">' +
+        "<thead><tr>" +
+          "<th>Código</th><th>Proceso</th><th>Tipología</th><th>Descripción del riesgo</th>" +
+          "<th>Prob.</th><th>Imp.</th><th>Inherente</th>" +
+          "<th>Control</th>" +
+          "<th>Prob. res.</th><th>Imp. res.</th><th>Residual</th>" +
+          SEGUIMIENTO_PERIODOS.map(function (p) { return "<th>" + esc(p.label) + '<div class="muted" style="font-size:0.68rem;text-transform:none;letter-spacing:0;">' + esc(p.sub) + "</div></th>"; }).join("") +
+          "<th>Estado</th><th></th>" +
+        "</tr></thead><tbody>" +
+        rows.map(function (r) {
+          var inactivo = r.estado === "Inactivo";
+          return (
+            '<tr class="' + (r.id === highlightId ? "highlight" : "") + '" data-row="' + r.id + '" style="' + (inactivo ? "opacity:0.55;" : "") + '">' +
+              '<td class="code-cell">' + esc(r.codigo) + "</td>" +
+              "<td>" + esc(r.proceso) + (r.subproceso ? '<div class="muted" style="font-size:0.76rem;">' + esc(r.subproceso) + "</div>" : "") + "</td>" +
+              "<td>" + esc(r.tipologia) + (r.activo_informacion ? '<div class="muted" style="font-size:0.76rem;">' + esc(r.activo_informacion) + "</div>" : "") + "</td>" +
+              '<td style="min-width:240px;">' + esc(r.descripcion_manual !== null ? r.descripcion_manual : textoDescripcion(r)) + "</td>" +
+              "<td>" + (r._inh.probDec ? pct(r._inh.probDec) : "—") + "</td>" +
+              "<td>" + (r._inh.impDec ? pct(r._inh.impDec) : "—") + "</td>" +
+              "<td>" + (r._inh.zona ? '<span class="zona-pill zona-' + r._inh.zona + '">' + r._inh.zona + "</span>" : "—") + "</td>" +
+              '<td style="min-width:280px;">' + controlSummaryHtml(r.controles) + "</td>" +
+              "<td>" + (r._res.probRes ? pct(r._res.probRes) : "—") + "</td>" +
+              "<td>" + (r._res.impRes ? pct(r._res.impRes) : "—") + "</td>" +
+              "<td>" + (r._res.zona ? '<span class="zona-pill zona-' + r._res.zona + '">' + r._res.zona + "</span>" : "—") + "</td>" +
+              SEGUIMIENTO_PERIODOS.map(function (p) {
+                return '<td style="min-width:150px;"><textarea class="segui-input" rows="2" data-risk="' + r.id + '" data-periodo="' + p.key + '" placeholder="Sin novedad…">' + esc(seguimientoVal(r, p.key)) + "</textarea></td>";
+              }).join("") +
+              "<td>" + (inactivo ? '<span class="zona-pill" style="background:var(--surface-2);color:var(--ink-faint);">Inactivo</span>' : '<span class="zona-pill" style="background:var(--zona-bajo-soft);color:var(--zona-bajo);">Activo</span>') + "</td>" +
+              '<td class="cell-actions">' +
+                '<button class="btn btn-sm btn-ghost" data-edit="' + r.id + '">Editar</button>' +
+                '<button class="btn btn-sm btn-ghost segui-save-btn" data-segui-save="' + r.id + '" hidden>Guardar seguimiento</button>' +
+                (inactivo ?
+                  '<button class="btn btn-sm btn-ghost" data-reactivate="' + r.id + '">Reactivar</button>' :
+                  '<button class="btn btn-sm btn-ghost" data-inactivate="' + r.id + '">Inactivar</button>') +
+                '<button class="btn btn-sm btn-danger" data-del="' + r.id + '">Eliminar</button>' +
+              "</td>" +
+            "</tr>"
+          );
+        }).join("") +
+        "</tbody></table></div>"
+    );
+  }
+
+  function bindMatrizEvents() {
+    var gotoBtn = document.querySelector("[data-goto='form']");
+    if (gotoBtn) gotoBtn.addEventListener("click", startNewRisk);
+
+    ["filter-proceso", "filter-tipologia", "filter-zona", "filter-estado"].forEach(function (id) {
+      var elx = document.getElementById(id);
+      if (elx) elx.addEventListener("change", function () {
+        if (id === "filter-proceso") ui.filterProceso = elx.value;
+        if (id === "filter-tipologia") ui.filterTipologia = elx.value;
+        if (id === "filter-zona") ui.filterZona = elx.value;
+        if (id === "filter-estado") ui.filterEstado = elx.value;
+        renderApp();
+      });
+    });
+    var search = document.getElementById("filter-search");
+    if (search) search.addEventListener("input", function () { ui.search = search.value; renderApp(); });
+    var clearBtn = document.getElementById("clear-filters");
+    if (clearBtn) clearBtn.addEventListener("click", function () {
+      ui.filterProceso = ""; ui.filterTipologia = ""; ui.filterZona = ""; ui.filterEstado = ""; ui.search = "";
+      renderApp();
+    });
+
+    document.querySelectorAll("[data-edit]").forEach(function (btn) {
+      btn.addEventListener("click", function () { startEditRisk(btn.getAttribute("data-edit")); });
+    });
+    document.querySelectorAll("[data-del]").forEach(function (btn) {
+      btn.addEventListener("click", function () { ui.passwordGate = { action: "delete", riskId: btn.getAttribute("data-del"), error: "" }; renderApp(); });
+    });
+    document.querySelectorAll("[data-inactivate]").forEach(function (btn) {
+      btn.addEventListener("click", function () { ui.passwordGate = { action: "inactivate", riskId: btn.getAttribute("data-inactivate"), error: "" }; renderApp(); });
+    });
+    document.querySelectorAll("[data-reactivate]").forEach(function (btn) {
+      btn.addEventListener("click", function () { reactivateRisk(btn.getAttribute("data-reactivate")); });
+    });
+
+    // Seguimiento: escribir no re-renderiza (evita perder el foco); "Guardar seguimiento" publica el cambio.
+    document.querySelectorAll("textarea.segui-input").forEach(function (ta) {
+      ta.addEventListener("input", function () {
+        var btn = document.querySelector('[data-segui-save="' + ta.getAttribute("data-risk") + '"]');
+        if (btn) btn.hidden = false;
+      });
+    });
+    document.querySelectorAll("[data-segui-save]").forEach(function (btn) {
+      btn.addEventListener("click", function () { saveSeguimiento(btn.getAttribute("data-segui-save")); });
+    });
+
+    getDownloadsCap().then(function (cap) {
+      var btn = document.getElementById("export-csv");
+      if (!btn) return;
+      if (!cap) { btn.hidden = true; return; }
+      btn.hidden = false;
+      btn.addEventListener("click", function () {
+        cap.save({ filename: "matriz-riesgos-jamundi.csv", data: buildCsv() }).catch(function () {
+          pushToast("No se pudo generar la descarga en este momento.", "error");
+        });
+      });
+    });
+  }
+
+  function saveSeguimiento(riskId) {
+    var risk = state.risks.find(function (r) { return r.id === riskId; });
+    if (!risk) return;
+    if (!risk.seguimiento) risk.seguimiento = { marzo: "", agosto: "", diciembre: "" };
+    SEGUIMIENTO_PERIODOS.forEach(function (p) {
+      var ta = document.querySelector('textarea.segui-input[data-risk="' + riskId + '"][data-periodo="' + p.key + '"]');
+      if (ta) risk.seguimiento[p.key] = ta.value;
+    });
+    risk.actualizado_en = new Date().toISOString();
+    pushToast("Seguimiento guardado.", "info");
+    persist();
+    renderApp();
+  }
+
+  function buildCsv() {
+    var headers = ["Codigo", "Proceso", "Subproceso", "Responsable", "Tipologia", "Activo de informacion", "Tipo de afectacion", "Causa inmediata", "Causa raiz", "Descripcion",
+      "Probabilidad", "Impacto", "Riesgo inherente", "Zona inherente",
+      "Control - Responsable y frecuencia", "Control - Accion y complemento", "Control - Desviacion y registro", "Control - Tipo", "Control - Implementacion",
+      "Probabilidad residual", "Impacto residual", "Riesgo residual", "Zona residual"];
+    SEGUIMIENTO_PERIODOS.forEach(function (p) { headers.push(p.label + " (" + p.sub + ")"); });
+    headers.push("Estado");
+    var lines = [headers.join(";")];
+    state.risks.map(withCalculos).forEach(function (r) {
+      var afect = r.tipologia === "Fiscal" ? (r.efectos_fiscales || []).join(" | ") : (r.tipo_afectacion || []).join(" | ");
+      var controlJoin = function (fieldName) { return (r.controles || []).map(function (c) { return c[fieldName] || ""; }).join(" | "); };
+      var row = [
+        r.codigo, r.proceso, r.subproceso, r.responsable, r.tipologia, r.activo_informacion || "", afect,
+        causaInmediataTexto(r), r.causa_raiz, (r.descripcion_manual !== null ? r.descripcion_manual : textoDescripcion(r)),
+        r._inh.probDec ? pct(r._inh.probDec) : "", r._inh.impDec ? pct(r._inh.impDec) : "",
+        r._inh.riesgo ? pct(r._inh.riesgo) : "", r._inh.zona || "",
+        controlJoin("responsable_frecuencia"), controlJoin("accion_complemento"), controlJoin("desviacion_registro"), controlJoin("tipo_control"), controlJoin("implementacion"),
+        r._res.probRes ? pct(r._res.probRes) : "", r._res.impRes ? pct(r._res.impRes) : "",
+        r._res.riesgoRes ? pct(r._res.riesgoRes) : "", r._res.zona || ""
+      ];
+      SEGUIMIENTO_PERIODOS.forEach(function (p) { row.push(seguimientoVal(r, p.key)); });
+      row.push(r.estado);
+      lines.push(row.map(csvField).join(";"));
+    });
+    return lines.join("\n");
+  }
+  function csvField(v) {
+    var s = String(v === undefined || v === null ? "" : v).replace(/"/g, '""');
+    return '"' + s + '"';
+  }
+
+  /* ---------------------------------------------------------------------
+     11. GUÍA METODOLÓGICA
+     --------------------------------------------------------------------- */
+  function renderGuiaView() {
+    return (
+      '<div class="view">' +
+        '<div class="view-head"><div><h1 class="view-title">Guía metodológica</h1>' +
+        '<p class="view-desc">Referencia rápida de la Guía para la Administración del Riesgo — DAFP Versión 7, aplicada en esta matriz.</p></div></div>' +
+
+        '<div class="ref-grid" style="margin-bottom:16px;">' +
+          '<div class="card card-pad">' +
+            '<div class="section-title">Tabla 4 — Probabilidad</div>' +
+            '<table class="ref"><thead><tr><th>Nivel</th><th>Frecuencia de la actividad</th><th>%</th></tr></thead><tbody>' +
+              PROBABILIDAD.map(function (p) { return "<tr><td>" + esc(p.nivel) + "</td><td>" + esc(p.rango) + '</td><td class="num">' + pct(p.dec) + "</td></tr>"; }).join("") +
+            "</tbody></table>" +
+          "</div>" +
+          '<div class="card card-pad">' +
+            '<div class="section-title">Zonas de severidad</div>' +
+            '<table class="ref"><thead><tr><th>Zona</th><th>Rango</th><th>Actuación requerida</th></tr></thead><tbody>' +
+              ZONAS.map(function (z, i) {
+                var min = i === 0 ? 0 : ZONAS[i - 1].max;
+                return "<tr><td><span class=\"zona-pill zona-" + z.zona + "\">" + z.zona + "</span></td><td class=\"num\">" + pct(min) + "–" + pct(Math.min(z.max, 1)) + "</td><td>" + esc(z.accion) + "</td></tr>";
+              }).join("") +
+            "</tbody></table>" +
+          "</div>" +
+        "</div>" +
+
+        '<div class="ref-grid" style="margin-bottom:16px;">' +
+          '<div class="card card-pad">' +
+            '<div class="section-title">Tabla 5 — Impacto económico</div>' +
+            '<table class="ref"><thead><tr><th>Nivel</th><th>Criterio (SMLMV)</th><th>%</th></tr></thead><tbody>' +
+              IMPACTO_ECONOMICO.map(function (p) { return "<tr><td>" + esc(p.nivel) + "</td><td>" + esc(p.criterio) + '</td><td class="num">' + pct(p.dec) + "</td></tr>"; }).join("") +
+            "</tbody></table>" +
+          "</div>" +
+          '<div class="card card-pad">' +
+            '<div class="section-title">Tabla 5 — Impacto reputacional</div>' +
+            '<table class="ref"><thead><tr><th>Nivel</th><th>Criterio</th><th>%</th></tr></thead><tbody>' +
+              IMPACTO_REPUTACIONAL.map(function (p) { return "<tr><td>" + esc(p.nivel) + "</td><td>" + esc(p.criterio) + '</td><td class="num">' + pct(p.dec) + "</td></tr>"; }).join("") +
+            "</tbody></table>" +
+          "</div>" +
+        "</div>" +
+
+        '<div class="card card-pad" style="margin-bottom:16px;">' +
+          '<div class="section-title">Tipologías de riesgo</div>' +
+          '<dl class="def-list">' +
+            TIPOLOGIAS.map(function (t) { return '<div class="def-item"><dt>' + esc(t) + "</dt><dd>" + esc(TIPOLOGIA_DEF[t]) + "</dd></div>"; }).join("") +
+          "</dl>" +
+          '<p class="section-note" style="margin-top:12px;">Para el riesgo fiscal, el tipo de afectación corresponde a uno o varios de: ' + esc(FISCAL_EFECTOS.join(" · ")) + ".</p>" +
+        "</div>" +
+
+        '<div class="card card-pad">' +
+          '<div class="section-title">Controles y cálculo del riesgo residual</div>' +
+          '<table class="ref" style="margin-bottom:12px;"><thead><tr><th>Tipo de control</th><th>Efectividad</th><th>Afecta</th></tr></thead><tbody>' +
+            '<tr><td>Preventivo</td><td class="num">' + pct(CONTROL_TIPO_PCT.Preventivo) + "</td><td>Probabilidad</td></tr>" +
+            '<tr><td>Detectivo</td><td class="num">' + pct(CONTROL_TIPO_PCT.Detectivo) + "</td><td>Probabilidad</td></tr>" +
+            '<tr><td>Correctivo</td><td class="num">' + pct(CONTROL_TIPO_PCT.Correctivo) + "</td><td>Impacto</td></tr>" +
+          "</tbody></table>" +
+          '<table class="ref" style="margin-bottom:12px;"><thead><tr><th>Implementación</th><th>Efectividad adicional</th></tr></thead><tbody>' +
+            '<tr><td>Manual</td><td class="num">' + pct(CONTROL_MODO_PCT.Manual) + "</td></tr>" +
+            '<tr><td>Automático</td><td class="num">' + pct(CONTROL_MODO_PCT["Automático"]) + "</td></tr>" +
+          "</tbody></table>" +
+          '<p class="section-note">Efectividad de un control = % por tipo + % por implementación. La probabilidad residual descuenta la suma de efectividades de los controles preventivos y detectivos; el impacto residual descuenta la suma de efectividades de los controles correctivos.</p>' +
+          '<p class="section-note" style="margin-top:8px;">Prob. residual = Prob. inherente × MAX(0, 1 − Σ efectividad prev./det.) · Impacto residual = Impacto inherente × MAX(0, 1 − Σ efectividad correctivo) · Riesgo residual = Prob. residual × Impacto residual.</p>' +
+        "</div>" +
+      "</div>"
+    );
+  }
+
+  /* ---------------------------------------------------------------------
+     12. MODAL DE CONFIRMACIÓN
+     --------------------------------------------------------------------- */
+  function reactivateRisk(riskId) {
+    var r = state.risks.find(function (x) { return x.id === riskId; });
+    if (!r) return;
+    r.estado = "Activo";
+    r.actualizado_en = new Date().toISOString();
+    pushToast("Riesgo reactivado.", "info");
+    persist();
+    renderApp();
+  }
+
+  function renderModal() {
+    if (!ui.passwordGate) return "";
+    var r = state.risks.find(function (x) { return x.id === ui.passwordGate.riskId; });
+    if (!r) return "";
+    var isDelete = ui.passwordGate.action === "delete";
+    var title = isDelete ? "Eliminar riesgo" : "Inactivar riesgo";
+    var desc = isDelete
+      ? "¿Confirmas eliminar el riesgo <strong>" + esc(r.codigo) + "</strong>? Esta acción no se puede deshacer y se removerá de la matriz."
+      : "¿Confirmas inactivar el riesgo <strong>" + esc(r.codigo) + "</strong>? Quedará marcado como inactivo pero seguirá en la matriz para consulta; puedes reactivarlo luego.";
+    return (
+      '<div class="modal-backdrop" id="pw-gate-backdrop">' +
+        '<div class="modal">' +
+          "<h3>" + esc(title) + "</h3>" +
+          "<p>" + desc + "</p>" +
+          '<form id="pw-gate-form">' +
+            '<div class="field" style="margin-bottom:10px;">' +
+              '<label>Contraseña de confirmación</label>' +
+              '<input type="password" id="pw-gate-input" autocomplete="off" autofocus>' +
+            "</div>" +
+            (ui.passwordGate.error ? '<p class="error-text" style="margin-bottom:8px;">' + esc(ui.passwordGate.error) + "</p>" : "") +
+            '<div class="btn-row">' +
+              '<button type="submit" class="btn ' + (isDelete ? "btn-danger" : "btn-primary") + '">' + esc(isDelete ? "Eliminar" : "Inactivar") + "</button>" +
+              '<button type="button" class="btn btn-ghost" id="pw-gate-cancel">Cancelar</button>' +
+            "</div>" +
+          "</form>" +
+        "</div>" +
+      "</div>"
+    );
+  }
+
+  function bindGlobalEvents() {
+    document.querySelectorAll(".tab-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var tab = btn.getAttribute("data-tab");
+        if (tab === "form" && !draft) startNewRisk();
+        else { ui.tab = tab; renderApp(); }
+      });
+    });
+    var backdrop = document.getElementById("pw-gate-backdrop");
+    if (backdrop) {
+      backdrop.addEventListener("click", function (e) { if (e.target === backdrop) { ui.passwordGate = null; renderApp(); } });
+      var cancelBtn = document.getElementById("pw-gate-cancel");
+      if (cancelBtn) cancelBtn.addEventListener("click", function () { ui.passwordGate = null; renderApp(); });
+      var pwForm = document.getElementById("pw-gate-form");
+      if (pwForm) pwForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var typed = document.getElementById("pw-gate-input").value;
+        if (typed !== ACTION_PASSWORD) {
+          ui.passwordGate.error = "Contraseña incorrecta.";
+          renderApp();
+          return;
+        }
+        var gate = ui.passwordGate;
+        var riskId = gate.riskId;
+        if (gate.action === "delete") {
+          state.risks = state.risks.filter(function (r) { return r.id !== riskId; });
+          if (ui.editingId === riskId) { ui.editingId = null; draft = null; ui.tab = "matriz"; }
+          pushToast("Riesgo eliminado.", "info");
+        } else {
+          var r = state.risks.find(function (x) { return x.id === riskId; });
+          if (r) { r.estado = "Inactivo"; r.actualizado_en = new Date().toISOString(); }
+          if (draft && ui.editingId === riskId) draft.estado = "Inactivo";
+          pushToast("Riesgo inactivado.", "info");
+        }
+        ui.passwordGate = null;
+        persist();
+        renderApp();
+      });
+    }
+  }
+
+  /* ---------------------------------------------------------------------
+     13. INIT
+     --------------------------------------------------------------------- */
+  function init() {
+    state = loadInitialState();
+    try {
+      var stash = JSON.parse(sessionStorage.getItem("jamundi-last-tab") || "null");
+      if (stash && stash.tab) ui.tab = stash.tab;
+    } catch (e) {}
+    renderApp();
+
+    // Orden de prioridad: artefacto de Claude (claude.ai) > backend PHP propio (api.php) > localStorage.
+    getArtifactCap().then(function (cap) {
+      if (cap) {
+        backendMode = "artifact";
+        setPersistState("ok");
+        return;
+      }
+      httpLoad();
+    });
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+  else init();
+})();
+
+</script>
+</body>
+</html>
