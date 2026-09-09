@@ -109,6 +109,7 @@
 			<div class="flex justify-end p-4">
 				<button
 					class="rounded-md p-2 text-gray-600 hover:text-gray-900 focus:outline-none"
+					aria-label="Cerrar menú"
 					on:click={() => (isMobileMenuOpen = false)}
 				>
 					<svg

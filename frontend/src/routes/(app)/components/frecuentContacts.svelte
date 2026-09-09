@@ -35,7 +35,10 @@
 						</div>
 					</div>
 					<div class="flex space-x-2">
-						<button class="rounded-full p-2 text-gray-600 hover:bg-blue-50 hover:text-blue-600">
+						<button
+							class="rounded-full p-2 text-gray-600 hover:bg-blue-50 hover:text-blue-600"
+							aria-label={`Enviar mensaje a ${contact.name}`}
+						>
 							<svg
 								xmlns="http://www.w3.org/2000/svg"
 								class="h-5 w-5"
@@ -51,7 +54,10 @@
 								/>
 							</svg>
 						</button>
-						<button class="rounded-full p-2 text-gray-600 hover:bg-green-50 hover:text-green-600">
+						<button
+							class="rounded-full p-2 text-gray-600 hover:bg-green-50 hover:text-green-600"
+							aria-label={`Llamar a ${contact.name}`}
+						>
 							<svg
 								xmlns="http://www.w3.org/2000/svg"
 								class="h-5 w-5"

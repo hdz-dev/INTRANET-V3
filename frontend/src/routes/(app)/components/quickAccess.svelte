@@ -1,6 +1,5 @@
 <script>
 	export let quickAccess;
-	export let navigateTo;
 </script>
 
 <!--   
