@@ -1,4 +1,5 @@
 <script>
+	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import WelcomeCard from './components/welcomeCard.svelte';
 	import NewsSection from './components/newsSection.svelte';
@@ -35,10 +36,11 @@
 		});
 	}
 
-	function navigateTo(section) {
+	function navigateTo(route, section) {
 		activeSection = section;
 		if (window.innerWidth < 768) isMobileMenuOpen = false;
 		window.scrollTo({ top: 0, behavior: 'smooth' });
+		goto(route);
 	}
 
 	function calculatePercentage(value, target) {
@@ -60,11 +62,11 @@
 
 <div class="min-h-screen overflow-y-auto bg-transparent">
 	<div class="flex">
-		<SideBar {isSidebarCollapsed} {isMobileMenuOpen} {activeSection} {navigateTo} />
+		<SideBar bind:isSidebarCollapsed {isMobileMenuOpen} {activeSection} {navigateTo} />
 
 		<main
 			class="min-w-0 flex-1 transition-[margin] duration-300"
-			style="margin-left: {isSidebarCollapsed ? '5rem' : '16rem'}"
+			style="margin-left: {isSidebarCollapsed ? '4rem' : '18rem'}"
 		>
 			<div class="container mx-auto space-y-8 px-4 py-8 pt-20">
 				<WelcomeCard userData={dashboard.userData} {currentDate} {formatDateTime} />
