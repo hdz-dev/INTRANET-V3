@@ -50,6 +50,7 @@ const riskSamples = [
 ];
 
 const storedRisksKey = 'giga-risks-v1';
+const followUpRecordsKey = 'giga-risk-follow-ups-v1';
 
 export const riskFormOptions = {
 	types: ['Gestión', 'Fiscal', 'Seguridad de la Información', 'Integridad Pública', 'LA/FT'],
@@ -201,7 +202,61 @@ function normalizeRisk(value, key = '') {
 }
 
 export function getRiskById(id) {
-	return riskSamples.find((risk) => risk.id === id) || null;
+	return getAllRisks().find((risk) => risk.id === id) || null;
+}
+
+export function getAllRisks() {
+	const stored = getStoredRisks();
+	const storedIds = new Set(stored.map((risk) => risk.id));
+	return [
+		...stored.map((risk) => ({ ...risk, controls: risk.controls || [] })),
+		...riskSamples.filter((risk) => !storedIds.has(risk.id)).map((risk) => ({ ...risk, controls: risk.controls || [] }))
+	];
+}
+
+export function getFollowUpRecords() {
+	if (typeof localStorage === 'undefined') return [];
+	try {
+		const stored = JSON.parse(localStorage.getItem(followUpRecordsKey) || '[]');
+		return Array.isArray(stored) ? stored : [];
+	} catch {
+		return [];
+	}
+}
+
+export function getFollowUpsForRisk(riskId) {
+	return getFollowUpRecords().filter((record) => record.riskId === riskId).sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+}
+
+export function createFollowUpDraft(risk) {
+	return {
+		id: crypto.randomUUID(),
+		riskId: risk.id,
+		period: 'T1',
+		type: 'Segunda línea',
+		reviewer: '',
+		status: 'Borrador',
+		date: new Date().toISOString().slice(0, 10),
+		nextReviewDate: '',
+		conclusion: '',
+		observations: [],
+		controlEvaluations: (risk.controls || []).map((control) => ({
+			controlId: control.id,
+			implementation: 'No evaluado',
+			compliance: 'No evaluado',
+			effectiveness: 'No evaluado',
+			observation: '',
+			evidence: ''
+		})),
+		createdAt: new Date().toISOString(),
+		updatedAt: new Date().toISOString()
+	};
+}
+
+export function saveFollowUpRecord(record) {
+	if (typeof localStorage === 'undefined') return;
+	const records = getFollowUpRecords().filter((item) => item.id !== record.id);
+	localStorage.setItem(followUpRecordsKey, JSON.stringify([...records, { ...record, updatedAt: new Date().toISOString() }]));
 }
 
 export function getRiskSummary(risks) {

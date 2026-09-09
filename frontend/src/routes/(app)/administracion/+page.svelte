@@ -538,12 +538,12 @@
 
 {#if showUserModal}
 	<div
-		class="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/55 p-4 backdrop-blur-[3px]"
+		class="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/55x p-4 backdrop-blur-[6px] "
 		role="presentation"
 		on:click={(event) => event.currentTarget === event.target && closeUserModal()}
 	>
 		<form
-			class="glass-3 w-full max-w-lg overflow-hidden border border-white/60 p-0"
+			class="glass-3 w-full max-w-lg overflow-hidden border border-white/60x rounded-2xl p-0"
 			on:submit|preventDefault={createUser}
 		>
 			<header class="flex items-center justify-between bg-[#3f51f5] px-5 py-4">
@@ -566,7 +566,7 @@
 				<div>
 					<p class="block text-xs font-semibold text-gray-700">Avatar del usuario</p>
 					<div
-						class="flex min-h-20 flex-col items-center justify-center gap-0.5 rounded-lg border border-dashed border-slate-300 bg-slate-50/45 text-slate-500"
+						class="flex min-h-20 flex-col items-center justify-center gap-0.5 rounded-lg border border-dashed border-slate-300 bg-slate-50/90 text-slate-500"
 					>
 						<span class="text-xl text-slate-600">♙</span><strong class="text-xs text-slate-700"
 							>Seleccionar imagen</strong
@@ -635,6 +635,7 @@
 							>{/each}</select
 					></label
 				>
+
 				{#if userForm.roleId}<label class="block text-xs font-semibold text-gray-700"
 						>Alcance del rol<select
 							bind:value={userForm.scopeType}

@@ -11,6 +11,12 @@
 		content="Espacio preparado para el módulo de Gestión Integral de Riesgos de GIGA."
 	/>
 </svelte:head>
+					<a
+						href="/mipg/gestion-riesgos/seguimiento"
+						class="inline-flex items-center rounded-lg border border-primary/40 bg-white/55 px-5 py-2.5 text-sm font-semibold text-primary transition hover:bg-white focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+					>
+						Abrir seguimiento <span class="ml-2" aria-hidden="true">→</span>
+					</a>
 
 <main class="min-h-screen px-4 py-8 sm:px-6 lg:px-10">
 	<div class="mx-auto max-w-7xl space-y-8">
