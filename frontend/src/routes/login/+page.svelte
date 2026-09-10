@@ -24,6 +24,7 @@
 	}
 </script>
 
+
 <main
 	class="min-h-screenx h-screenx bg-centerx flex items-center justify-end bg-cover bg-no-repeat"
 	style="background-image: url('/src/lib/assets/1.png'); "
@@ -51,10 +52,13 @@
 			</form>
 			<!-- <div class="m-12">
     <a href="/login/recover" class="link link-primary"
-      >¿Olvidaste tu contraseña?</a
+      >¿Olvidaste tu contraseña? </a
     >
   </div> -->
 			<div class="mb-8"></div>
 		</section>
 	</container>
 </main>
+
+
+// End of login page component

@@ -1,6 +1,6 @@
 <script>
-	//import { isLoggedIn } from './../../lib/authStore.js';
-	//import Calendar from './../../../lib/components/calendar.svelte';
+	
+
 	import Calendar2 from '$lib/components/calendar2.svelte';
 	import Publicaciones from '$lib/components/publicaciones.svelte';
 	import Title from '$lib/components/title.svelte';
