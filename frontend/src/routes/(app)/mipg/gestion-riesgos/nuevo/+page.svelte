@@ -11,11 +11,14 @@
 		getIntensityClass
 	} from '$lib/services/riesgosService.js';
 	import { getAssetsForSelection } from '$lib/services/activosService.js';
+	import {
+		getSubprocessesForProcess,
+		institutionalProcessNames
+	} from '$lib/institutional-processes.js';
 	import Modal from '$lib/components/modal.svelte';
 	import { onMount } from 'svelte';
 	const {
 		types,
-		processes,
 		processSiglas,
 		typeSiglas,
 		probabilities,
@@ -92,6 +95,7 @@
 		process: '',
 		subProcess: '',
 		responsible: '',
+		processLeader: '',
 		status: 'Activo',
 		type: '',
 		generalImpacts: [],
@@ -106,6 +110,9 @@
 		rootCause: '',
 		description: ''
 	};
+	$: subprocessOptions = getSubprocessesForProcess(form.process);
+	$: selectedProcessLeader =
+		subprocessOptions.find((item) => item.subprocess === form.subProcess)?.leader || '';
 	$: generatedCode = generateRiskCode(form.process, form.type);
 	$: hasDescriptionData = Boolean(form.immediateCause?.trim() && form.rootCause?.trim());
 	$: generatedDescription = hasDescriptionData
@@ -126,6 +133,19 @@
 			informationAssetId: '',
 			economicImpact: '',
 			reputationalImpact: ''
+		};
+	}
+	function onProcessChange(event) {
+		const process = event.currentTarget.value;
+		form = { ...form, process, subProcess: '', processLeader: '' };
+	}
+
+	function onSubprocessChange(event) {
+		const subProcess = event.currentTarget.value;
+		form = {
+			...form,
+			subProcess,
+			processLeader: subprocessOptions.find((item) => item.subprocess === subProcess)?.leader || ''
 		};
 	}
 	function isInformationSecurity(type = form.type) {
@@ -583,16 +603,37 @@
 								class="control"
 							/></label
 						><label
-							>Proceso institucional<select required bind:value={form.process} class="control"
+							>Proceso institucional<select
+								required
+								value={form.process}
+								on:change={onProcessChange}
+								class="control"
 								><option value="">Selecciona un proceso</option
-								>{#each processes as process (process)}<option value={process}>{process}</option
+								>{#each institutionalProcessNames as process (process)}<option value={process}
+										>{process}</option
 									>{/each}</select
 							></label
 						><label
-							>Subproceso o dependencia<input
-								bind:value={form.subProcess}
+							>Subproceso institucional<select
+								required={Boolean(form.process)}
+								value={form.subProcess}
+								on:change={onSubprocessChange}
 								class="control"
-								placeholder="Área relacionada"
+								disabled={!form.process}
+								><option value=""
+									>{form.process
+										? 'Selecciona un subproceso'
+										: 'Selecciona primero un proceso'}</option
+								>{#each subprocessOptions as item (item.subprocess)}<option value={item.subprocess}
+										>{item.subprocess}</option
+									>{/each}</select
+							></label
+						><label
+							>Líder del proceso<input
+								value={selectedProcessLeader}
+								readonly
+								class="control"
+								placeholder="Se completa al elegir el subproceso"
 							/></label
 						><label class="md:col-span-2"
 							>Responsable del riesgo<input
