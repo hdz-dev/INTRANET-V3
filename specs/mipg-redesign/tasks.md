@@ -21,24 +21,24 @@
 
 ## Etapa 3: Calidad
 
-- [ ] T10 Revisar responsive móvil/tablet/escritorio.
-- [ ] T11 Revisar teclado, focus-visible, contraste y reduced motion.
-- [ ] T12 Ejecutar lint, build y validación de rutas.
-- [ ] T13 Comparar visualmente `/mipg` y `/mipg-nuevo` sin modificar la versión actual.
+- [x] T10 Revisar responsive móvil/tablet/escritorio.
+- [x] T11 Revisar teclado, focus-visible, contraste y reduced motion.
+- [x] T12 Ejecutar lint, build y validación de rutas.
+- [x] T13 Comparar visualmente `/mipg` y `/mipg-nuevo` sin modificar la versión actual.
 
 ## Etapa 4: Overlays y flujo contextual
 
-- [ ] T14 Auditar `src/lib/components/modal.svelte` y overlays existentes.
+- [x] T14 Auditar `src/lib/components/modal.svelte` y overlays existentes.
   - Aceptación: documentar si se pueden reutilizar sin afectar `/mipg`.
-- [ ] T15 Crear `ModalBase` aislado para `/mipg-nuevo` si el primitive existente no cubre Escape, foco, backdrop y scroll.
+- [x] T15 Crear `ModalBase` aislado para `/mipg-nuevo` si el primitive existente no cubre Escape, foco, backdrop y scroll.
   - Aceptación: modal accesible, responsive y con header/footer opcionales.
-- [ ] T16 Crear `DrawerBase` lateral derecho aislado para `/mipg-nuevo`.
+- [x] T16 Crear `DrawerBase` lateral derecho aislado para `/mipg-nuevo`.
   - Aceptación: scroll interno, cierre por botón/Escape, backdrop y focus visible.
-- [ ] T17 Crear `ModalConfirmacion` reutilizable.
+- [x] T17 Crear `ModalConfirmacion` reutilizable.
   - Aceptación: acciones destructivas muestran contexto, Cancelar y Confirmar.
-- [ ] T18 Aplicar modales y drawers según la matriz de `design.md`.
+- [x] T18 Aplicar modales y drawers según la matriz de `design.md`.
   - Aceptación: cada acción implementada usa el patrón documentado y no agrega overlays por decoración.
-- [ ] T19 Probar overlays en móvil, teclado, Escape, reduced motion y pérdida de foco.
+- [x] T19 Probar overlays en móvil, teclado, Escape, reduced motion y pérdida de foco.
   - Aceptación: no se puede interactuar con el contenido de fondo mientras el overlay está abierto.
 
 ## Restricciones de implementación

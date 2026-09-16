@@ -58,8 +58,14 @@
 			materializations = storedRisk.materializations || [];
 			evidences = storedRisk.evidences || [];
 
-			if (storedRisk.form && !storedRisk.form.informationAssetId && storedRisk.form.informationAsset) {
-				const asset = informationAssets.find((item) => item.name === storedRisk.form.informationAsset);
+			if (
+				storedRisk.form &&
+				!storedRisk.form.informationAssetId &&
+				storedRisk.form.informationAsset
+			) {
+				const asset = informationAssets.find(
+					(item) => item.name === storedRisk.form.informationAsset
+				);
 				if (asset) form.informationAssetId = asset.identifier;
 			}
 		}
@@ -109,9 +115,10 @@
 	$: inherentCalculation = calculateInherentRisk(form);
 	$: residualCalculation = calculateResidualRisk(inherentCalculation, controls);
 	function onTypeChange(event) {
+		const selectedType = String(event.currentTarget.value || '').trim();
 		form = {
 			...form,
-			type: event.currentTarget.value,
+			type: selectedType,
 			fiscalImpacts: [],
 			generalImpacts: [],
 			securityProperties: [],
@@ -120,6 +127,13 @@
 			economicImpact: '',
 			reputationalImpact: ''
 		};
+	}
+	function isInformationSecurity(type = form.type) {
+		return (
+			String(type || '')
+				.trim()
+				.toLowerCase() === 'seguridad de la información'
+		);
 	}
 	function createId() {
 		return (
@@ -133,7 +147,8 @@
 		const descriptions = {
 			'Recursos públicos': 'Pérdida o afectación de dinero y recursos de la entidad.',
 			'Bienes públicos': 'Daño, pérdida o uso indebido de bienes públicos.',
-			'Intereses patrimoniales de naturaleza pública': 'Afectación del patrimonio o intereses económicos públicos.',
+			'Intereses patrimoniales de naturaleza pública':
+				'Afectación del patrimonio o intereses económicos públicos.',
 			Confidencialidad: 'Acceso o divulgación de información por personas no autorizadas.',
 			Integridad: 'Alteración, modificación o destrucción no autorizada de la información.',
 			Disponibilidad: 'Imposibilidad de acceder o utilizar la información cuando se necesita.',
@@ -155,12 +170,21 @@
 		return `${prefix}${String(highestNumber + 1).padStart(3, '0')}`;
 	}
 	function calculateInherentRisk(risk) {
-		const probability = risk.probability?.value ? Number.parseFloat(risk.probability.value) / 100 : 0;
+		const probability = risk.probability?.value
+			? Number.parseFloat(risk.probability.value) / 100
+			: 0;
 		const candidates = [];
-		if (risk.type === 'Fiscal' || risk.type === 'Seguridad de la Información' || risk.generalImpacts.includes('Económica')) {
+		if (
+			risk.type === 'Fiscal' ||
+			isInformationSecurity(risk.type) ||
+			risk.generalImpacts.includes('Económica')
+		) {
 			if (risk.economicImpact?.value) candidates.push(risk.economicImpact);
 		}
-		if (risk.type !== 'Fiscal' && (risk.type === 'Seguridad de la Información' || risk.generalImpacts.includes('Reputacional'))) {
+		if (
+			risk.type !== 'Fiscal' &&
+			(isInformationSecurity(risk.type) || risk.generalImpacts.includes('Reputacional'))
+		) {
 			if (risk.reputationalImpact?.value) candidates.push(risk.reputationalImpact);
 		}
 		const impact = candidates.reduce(
@@ -174,7 +198,10 @@
 		const score = probability * impactValue;
 		const zone = getRiskZone(risk.probability?.level, impact?.level);
 		return {
-			label: probability && impact ? `${risk.probability.level} + ${impact.level} · ${zone}` : 'Pendiente',
+			label:
+				probability && impact
+					? `${risk.probability.level} + ${impact.level} · ${zone}`
+					: 'Pendiente',
 			probability,
 			probabilityLevel: risk.probability?.level || '',
 			impactValue,
@@ -222,7 +249,9 @@
 	}
 	function controlDescription(control) {
 		if (control.manualDescription) return control.description || '';
-		const responsibleFrequency = control.responsibleFrequency?.trim() || [control.responsible?.trim(), control.frequency?.toLowerCase()].filter(Boolean).join(' ');
+		const responsibleFrequency =
+			control.responsibleFrequency?.trim() ||
+			[control.responsible?.trim(), control.frequency?.toLowerCase()].filter(Boolean).join(' ');
 		const action = lowerFirst(control.action?.trim());
 		const complement = control.actionComplement?.trim();
 		if (!responsibleFrequency || !action || !complement) return '';
@@ -236,7 +265,8 @@
 	}
 	function toggleControlDescription(control) {
 		control.manualDescription = !control.manualDescription;
-		if (control.manualDescription && !control.description) control.description = controlDescription(control);
+		if (control.manualDescription && !control.description)
+			control.description = controlDescription(control);
 	}
 	function updateControlDescription(control, event) {
 		control.description = event.currentTarget.value;
@@ -281,18 +311,38 @@
 			if (!String(form.responsible || '').trim()) errors.push('Indica el responsable del riesgo.');
 			if (!form.process) errors.push('Selecciona el proceso institucional.');
 			if (!form.type) errors.push('Selecciona la tipología del riesgo.');
-			if (form.type === 'Fiscal' && !form.fiscalImpacts.length) errors.push('Selecciona al menos un efecto dañoso fiscal.');
-			if (form.type === 'Seguridad de la Información' && !form.informationAssetId) errors.push('Selecciona el activo de información desde el inventario.');
-			if (form.type === 'Seguridad de la Información' && !form.securityProperties.length) errors.push('Selecciona al menos una propiedad de seguridad: Confidencialidad, Integridad o Disponibilidad.');
-			if (form.type !== 'Fiscal' && form.type !== 'Seguridad de la Información' && !form.generalImpacts.length) errors.push('Selecciona al menos una afectación general.');
+			if (form.type === 'Fiscal' && !form.fiscalImpacts.length)
+				errors.push('Selecciona al menos un efecto dañoso fiscal.');
+			if (isInformationSecurity() && !form.informationAssetId)
+				errors.push('Selecciona el activo de información desde el inventario.');
+			if (isInformationSecurity() && !form.securityProperties.length)
+				errors.push(
+					'Selecciona al menos una propiedad de seguridad: Confidencialidad, Integridad o Disponibilidad.'
+				);
+			if (form.type !== 'Fiscal' && !isInformationSecurity() && !form.generalImpacts.length)
+				errors.push('Selecciona al menos una afectación general.');
 		}
 		if (step === 2) {
 			if (!form.rootCause?.trim()) errors.push('Describe la causa raíz.');
 			if (!form.immediateCause?.trim()) errors.push('Describe la causa inmediata.');
 			if (!form.probability) errors.push('Selecciona la probabilidad.');
-			if ((form.type === 'Fiscal' || form.type === 'Seguridad de la Información' || form.generalImpacts.includes('Económica')) && !form.economicImpact && form.type !== 'Seguridad de la Información') errors.push('Selecciona el impacto económico.');
-			if (form.type === 'Seguridad de la Información' && !form.economicImpact && !form.reputationalImpact) errors.push('Selecciona al menos un impacto económico o reputacional.');
-			if (form.type !== 'Fiscal' && form.type !== 'Seguridad de la Información' && form.generalImpacts.includes('Reputacional') && !form.reputationalImpact) errors.push('Selecciona el impacto reputacional.');
+			if (
+				(form.type === 'Fiscal' ||
+					isInformationSecurity() ||
+					form.generalImpacts.includes('Económica')) &&
+				!form.economicImpact &&
+				!isInformationSecurity()
+			)
+				errors.push('Selecciona el impacto económico.');
+			if (isInformationSecurity() && !form.economicImpact && !form.reputationalImpact)
+				errors.push('Selecciona al menos un impacto económico o reputacional.');
+			if (
+				form.type !== 'Fiscal' &&
+				!isInformationSecurity() &&
+				form.generalImpacts.includes('Reputacional') &&
+				!form.reputationalImpact
+			)
+				errors.push('Selecciona el impacto reputacional.');
 		}
 		return errors;
 	}
@@ -313,25 +363,37 @@
 		if (form.type === 'Fiscal' && !form.fiscalImpacts.length) {
 			errors.push('Selecciona al menos un efecto dañoso para el riesgo fiscal.');
 		}
-		if (form.type !== 'Fiscal' && form.type !== 'Seguridad de la Información' && !form.generalImpacts.length) {
+		if (form.type !== 'Fiscal' && !isInformationSecurity() && !form.generalImpacts.length) {
 			errors.push('Selecciona al menos un tipo de afectación.');
 		}
-		if (form.type === 'Seguridad de la Información') {
-			if (!form.informationAssetId) errors.push('Selecciona el activo de información desde el inventario.');
-			if (!form.securityProperties.length) errors.push('Selecciona al menos una propiedad afectada.');
+		if (isInformationSecurity()) {
+			if (!form.informationAssetId)
+				errors.push('Selecciona el activo de información desde el inventario.');
+			if (!form.securityProperties.length)
+				errors.push('Selecciona al menos una propiedad afectada.');
 		}
 		if (!form.immediateCause.trim()) {
 			errors.push('Describe la causa inmediata.');
 		}
 		if (!String(form.rootCause || '').trim()) errors.push('Describe la causa raíz.');
 		if (!form.probability) errors.push('Selecciona la probabilidad.');
-		if (form.type !== 'Fiscal' && form.type !== 'Seguridad de la Información' && form.generalImpacts.includes('Económica') && !form.economicImpact) {
+		if (
+			form.type !== 'Fiscal' &&
+			!isInformationSecurity() &&
+			form.generalImpacts.includes('Económica') &&
+			!form.economicImpact
+		) {
 			errors.push('Selecciona el impacto económico.');
 		}
-		if (form.type === 'Seguridad de la Información' && !form.economicImpact && !form.reputationalImpact) {
+		if (isInformationSecurity() && !form.economicImpact && !form.reputationalImpact) {
 			errors.push('Selecciona al menos un impacto económico o reputacional.');
 		}
-		if (form.type !== 'Fiscal' && form.type !== 'Seguridad de la Información' && form.generalImpacts.includes('Reputacional') && !form.reputationalImpact) {
+		if (
+			form.type !== 'Fiscal' &&
+			!isInformationSecurity() &&
+			form.generalImpacts.includes('Reputacional') &&
+			!form.reputationalImpact
+		) {
 			errors.push('Selecciona el impacto reputacional.');
 		}
 		return errors;
@@ -344,11 +406,14 @@
 	function getAffectedText() {
 		const affected = form.type === 'Fiscal' ? form.fiscalImpacts : form.generalImpacts;
 		if (form.type === 'Fiscal') {
-			if (affected.length === 0) return 'un efecto dañoso sobre los recursos, bienes o intereses patrimoniales de naturaleza pública';
-			const fiscalText = affected.map((item) => item.replace(/^Efecto dañoso sobre /i, '').toLowerCase());
+			if (affected.length === 0)
+				return 'un efecto dañoso sobre los recursos, bienes o intereses patrimoniales de naturaleza pública';
+			const fiscalText = affected.map((item) =>
+				item.replace(/^Efecto dañoso sobre /i, '').toLowerCase()
+			);
 			return `un efecto dañoso sobre ${joinList(fiscalText)}`;
 		}
-		if (form.type === 'Seguridad de la Información') {
+		if (isInformationSecurity()) {
 			const properties = form.securityProperties || [];
 			if (!properties.length) return 'una afectación a la información';
 			const propertyText = properties.map((property) => property.toLowerCase());
@@ -368,7 +433,10 @@
 	}
 
 	function withoutPrefix(value, prefix) {
-		return String(value || '').trim().replace(new RegExp(`^${prefix}\\s+`, 'i'), '').trim();
+		return String(value || '')
+			.trim()
+			.replace(new RegExp(`^${prefix}\\s+`, 'i'), '')
+			.trim();
 	}
 	function updateDescription(event) {
 		form.description = event.currentTarget.value;
@@ -384,8 +452,8 @@
 				action: '',
 				actionComplement: '',
 				deviation: '',
-					description: '',
-					manualDescription: false,
+				description: '',
+				manualDescription: false,
 				type: '',
 				implementation: ''
 			}
@@ -423,7 +491,6 @@
 	function removeEvidence(id) {
 		evidences = evidences.filter((item) => item.id !== id);
 	}
-
 </script>
 
 <svelte:head
@@ -443,7 +510,7 @@
 			><span class="mx-2" aria-hidden="true">/</span><span>Nuevo riesgo</span>
 		</nav>
 		<section class="glass-3 rounded-2xl p-6 sm:p-10">
-			<p class="text-primary text-sm font-semibold tracking-[0.18em] uppercase">Identificación</p>
+			<p class="text-primary text-sm font-semibold uppercase tracking-[0.18em]">Identificación</p>
 			<h1 class="mt-3 text-3xl font-bold text-gray-900 sm:text-4xl">Registrar nuevo riesgo</h1>
 			<p class="mt-3 max-w-2xl text-base leading-7 text-gray-600">
 				Diligencia la información y revisa la captura antes de conectarla con persistencia.
@@ -451,14 +518,26 @@
 		</section>
 		{#if saved}<div role="status" class="validation-toast save-toast">
 				<div class="flex items-start justify-between gap-4">
-					<p class="font-semibold">Riesgo guardado localmente. Puedes continuar la gestión desde el detalle del riesgo.</p>
-					<button type="button" class="validation-close" aria-label="Cerrar notificación" on:click={() => (saved = false)}>×</button>
+					<p class="font-semibold">
+						Riesgo guardado localmente. Puedes continuar la gestión desde el detalle del riesgo.
+					</p>
+					<button
+						type="button"
+						class="validation-close"
+						aria-label="Cerrar notificación"
+						on:click={() => (saved = false)}>×</button
+					>
 				</div>
 			</div>{/if}
 		{#if validationErrors.length}<div role="alert" class="validation-toast">
 				<div class="flex items-start justify-between gap-4">
 					<p class="font-semibold">Revisa la información antes de continuar:</p>
-					<button type="button" class="validation-close" aria-label="Cerrar notificación" on:click={() => (validationErrors = [])}>×</button>
+					<button
+						type="button"
+						class="validation-close"
+						aria-label="Cerrar notificación"
+						on:click={() => (validationErrors = [])}>×</button
+					>
 				</div>
 				<ul class="mt-2 list-disc space-y-1 pl-5">
 					{#each validationErrors as error (error)}<li>{error}</li>{/each}
@@ -476,405 +555,679 @@
 		<form class="space-y-6" on:submit|preventDefault={handleSubmit}>
 			<nav class="stepper" aria-label="Progreso del formulario">
 				{#each steps as step (step.number)}
-					<button type="button" disabled={step.number > currentStep} class:step-active={currentStep === step.number} class:step-complete={currentStep > step.number} on:click={() => (currentStep = step.number)}>{step.number}<span>{step.label}</span></button>
+					<button
+						type="button"
+						disabled={step.number > currentStep}
+						class:step-active={currentStep === step.number}
+						class:step-complete={currentStep > step.number}
+						on:click={() => (currentStep = step.number)}
+						>{step.number}<span>{step.label}</span></button
+					>
 				{/each}
 			</nav>
 			{#if currentStep === 1}
-			<fieldset class="glass-3 rounded-xl p-6 sm:p-8">
-				<div class="fieldset-title">1. Datos del registro</div>
-				<div class="mt-6 grid gap-5 md:grid-cols-2">
+				<fieldset class="glass-3 rounded-xl p-6 sm:p-8">
+					<div class="fieldset-title">1. Datos del registro</div>
+					<div class="mt-6 grid gap-5 md:grid-cols-2">
+						<label
+							>Código institucional<input
+								value={generatedCode}
+								readonly
+								class="control"
+								placeholder="Se generará automáticamente"
+							/></label
+						><label
+							>Fecha de identificación<input
+								bind:value={form.date}
+								type="date"
+								class="control"
+							/></label
+						><label
+							>Proceso institucional<select required bind:value={form.process} class="control"
+								><option value="">Selecciona un proceso</option
+								>{#each processes as process (process)}<option value={process}>{process}</option
+									>{/each}</select
+							></label
+						><label
+							>Subproceso o dependencia<input
+								bind:value={form.subProcess}
+								class="control"
+								placeholder="Área relacionada"
+							/></label
+						><label class="md:col-span-2"
+							>Responsable del riesgo<input
+								bind:value={form.responsible}
+								class="control"
+								placeholder="Cargo o usuario responsable"
+							/></label
+						><label
+							>Estado del riesgo<select bind:value={form.status} class="control"
+								><option value="Activo">Activo</option><option value="Inactivo">Inactivo</option
+								></select
+							></label
+						>
+					</div>
+				</fieldset>
+				<fieldset class="glass-3 rounded-xl p-6 sm:p-8">
+					<div class="fieldset-title">2. Tipología y contexto</div>
 					<label
-						>Código institucional<input
-							value={generatedCode}
-							readonly
+						>Tipología del riesgo<select
+							required
+							value={form.type}
+							on:change={onTypeChange}
 							class="control"
-							placeholder="Se generará automáticamente"
-						/></label
-					><label
-						>Fecha de identificación<input
-							bind:value={form.date}
-							type="date"
-							class="control"
-						/></label
-					><label
-						>Proceso institucional<select required bind:value={form.process} class="control"
-							><option value="">Selecciona un proceso</option
-							>{#each processes as process (process)}<option value={process}>{process}</option
+							><option value="">Selecciona una tipología</option>{#each types as type (type)}<option
+									value={type}>{type}</option
 								>{/each}</select
 						></label
-					><label
-						>Subproceso o dependencia<input
-							bind:value={form.subProcess}
-							class="control"
-							placeholder="Área relacionada"
-						/></label
-					><label class="md:col-span-2"
-						>Responsable del riesgo<input
-							bind:value={form.responsible}
-							class="control"
-							placeholder="Cargo o usuario responsable"
-						/></label
-					><label
-						>Estado del riesgo<select bind:value={form.status} class="control"
-							><option value="Activo">Activo</option><option value="Inactivo">Inactivo</option></select
-						></label
 					>
-				</div>
-			</fieldset>
-			<fieldset class="glass-3 rounded-xl p-6 sm:p-8">
-				<div class="fieldset-title">2. Tipología y contexto</div><label
-					>Tipología del riesgo<select required bind:value={form.type} on:change={onTypeChange} class="control"
-						><option value="">Selecciona una tipología</option>{#each types as type (type)}<option
-								value={type}>{type}</option
-							>{/each}</select
-					></label
-				>
-				{#if form.type === 'LA/FT'}
-					<p class="mt-3 rounded-lg border border-amber-200 bg-amber-50/70 p-3 text-sm leading-6 text-amber-800">
-						LA/FT se muestra como referencia del prototipo; su ubicación definitiva dentro de Integridad Pública sigue pendiente de validación metodológica.
-					</p>
-				{/if}
-			</fieldset>
-			{#if form.type === 'Fiscal'}<fieldset class="glass-3 rounded-xl p-6 sm:p-8">
-					<div class="fieldset-title">3. Información fiscal</div>
-					<p class="mt-2 text-sm text-gray-600">Selecciona el tipo de efecto dañoso que podría afectar recursos, bienes o intereses patrimoniales de naturaleza pública.</p>
-					<div class="mt-5 grid gap-3 sm:grid-cols-3">
-						{#each riskFormOptions.fiscalImpacts as item (item)}<label class="pill option-pill"
-								><input
-									type="checkbox"
-									checked={form.fiscalImpacts.includes(item)}
-									on:change={() => (form.fiscalImpacts = toggle(form.fiscalImpacts, item))}
-								/><span><strong>{item}</strong><small>{optionDescription(item)}</small></span></label
-							>{/each}
-					</div>
+					{#if form.type === 'LA/FT'}
+						<p
+							class="mt-3 rounded-lg border border-amber-200 bg-amber-50/70 p-3 text-sm leading-6 text-amber-800"
+						>
+							LA/FT se muestra como referencia del prototipo; su ubicación definitiva dentro de
+							Integridad Pública sigue pendiente de validación metodológica.
+						</p>
+					{/if}
 				</fieldset>
-			{:else if String(form.type || '').trim() === 'Seguridad de la Información'}
-				<fieldset class="glass-3 rounded-xl p-6 sm:p-8">
-					<div class="fieldset-title">3. Seguridad de la Información</div>
-					<p class="mt-2 text-sm text-gray-600">Relaciona el riesgo con un activo y selecciona una o varias propiedades afectadas: Confidencialidad, Integridad o Disponibilidad.</p>
-					<div class="grid gap-5 md:grid-cols-2">
-						<label class="md:col-span-2">Activo de información<select required bind:value={form.informationAssetId} class="control" on:change={(event) => (form.informationAsset = informationAssets.find((asset) => asset.identifier === event.currentTarget.value)?.name || '')}><option value="">Selecciona un activo del inventario</option>{#each informationAssets as asset (asset.identifier)}<option value={asset.identifier}>{asset.identifier} · {asset.name}{asset.isExample ? ' (ejemplo)' : ''}</option>{/each}</select><span class="field-hint">Se asocia mediante el identificador funcional del inventario de Activos de Información.</span></label>
-						<div class="md:col-span-2">
-							<p>Propiedad afectada</p>
-							<div class="mt-3 flex flex-wrap gap-3">
-								{#each riskFormOptions.securityProperties as property (property)}<label class="pill option-pill"><input type="checkbox" checked={form.securityProperties.includes(property)} on:change={() => (form.securityProperties = toggle(form.securityProperties, property))} /><span><strong>{property}</strong><small>{optionDescription(property)}</small></span></label>{/each}
-							</div>
+				{#if form.type === 'Fiscal'}<fieldset class="glass-3 rounded-xl p-6 sm:p-8">
+						<div class="fieldset-title">3. Información fiscal</div>
+						<p class="mt-2 text-sm text-gray-600">
+							Selecciona el tipo de efecto dañoso que podría afectar recursos, bienes o intereses
+							patrimoniales de naturaleza pública.
+						</p>
+						<div class="mt-5 grid gap-3 sm:grid-cols-3">
+							{#each riskFormOptions.fiscalImpacts as item (item)}<label class="pill option-pill"
+									><input
+										type="checkbox"
+										checked={form.fiscalImpacts.includes(item)}
+										on:change={() => (form.fiscalImpacts = toggle(form.fiscalImpacts, item))}
+									/><span><strong>{item}</strong><small>{optionDescription(item)}</small></span
+									></label
+								>{/each}
 						</div>
-					</div>
-				</fieldset>
-			{:else if form.type}
-				<fieldset class="glass-3 rounded-xl p-6 sm:p-8">
-					<div class="fieldset-title">3. Afectaciones generales</div>
-					<p class="mt-2 text-sm text-gray-600">Selecciona una o ambas afectaciones para identificar si el riesgo puede generar consecuencias económicas, reputacionales o ambas.</p>
-					<div class="mt-5 flex flex-wrap gap-3">
-						{#each riskFormOptions.generalImpacts as item (item)}<label class="pill option-pill"><input type="checkbox" checked={form.generalImpacts.includes(item)} on:change={() => (form.generalImpacts = toggle(form.generalImpacts, item))} /><span><strong>{item}</strong><small>{optionDescription(item)}</small></span></label>{/each}
-					</div>
-				</fieldset>
-			{/if}
+					</fieldset>
+				{:else if String(form.type || '').trim() === 'Seguridad de la Información'}
+					{#key form.type}
+						<fieldset class="glass-3 rounded-xl p-6 sm:p-8">
+							<div class="fieldset-title">3. Seguridad de la Información</div>
+							<p class="mt-2 text-sm text-gray-600">
+								Relaciona el riesgo con un activo y selecciona una o varias propiedades afectadas:
+								Confidencialidad, Integridad o Disponibilidad.
+							</p>
+							<div class="grid gap-5 md:grid-cols-2">
+								<label class="md:col-span-2"
+									>Activo de información<select
+										required
+										bind:value={form.informationAssetId}
+										class="control"
+										on:change={(event) =>
+											(form.informationAsset =
+												informationAssets.find(
+													(asset) => asset.identifier === event.currentTarget.value
+												)?.name || '')}
+										><option value="">Selecciona un activo del inventario</option
+										>{#each informationAssets as asset (asset.identifier)}<option
+												value={asset.identifier}
+												>{asset.identifier} · {asset.name}{asset.isExample
+													? ' (ejemplo)'
+													: ''}</option
+											>{/each}</select
+									><span class="field-hint"
+										>Se asocia mediante el identificador funcional del inventario de Activos de
+										Información.</span
+									></label
+								>
+								<div class="md:col-span-2">
+									<p>Propiedad afectada</p>
+									<div class="mt-3 flex flex-wrap gap-3">
+										{#each riskFormOptions.securityProperties as property (property)}<label
+												class="pill option-pill"
+												><input
+													type="checkbox"
+													checked={form.securityProperties.includes(property)}
+													on:change={() =>
+														(form.securityProperties = toggle(form.securityProperties, property))}
+												/><span
+													><strong>{property}</strong><small>{optionDescription(property)}</small
+													></span
+												></label
+											>{/each}
+									</div>
+								</div>
+							</div>
+						</fieldset>
+					{/key}
+				{:else if form.type}
+					<fieldset class="glass-3 rounded-xl p-6 sm:p-8">
+						<div class="fieldset-title">3. Afectaciones generales</div>
+						<p class="mt-2 text-sm text-gray-600">
+							Selecciona una o ambas afectaciones para identificar si el riesgo puede generar
+							consecuencias económicas, reputacionales o ambas.
+						</p>
+						<div class="mt-5 flex flex-wrap gap-3">
+							{#each riskFormOptions.generalImpacts as item (item)}<label class="pill option-pill"
+									><input
+										type="checkbox"
+										checked={form.generalImpacts.includes(item)}
+										on:change={() => (form.generalImpacts = toggle(form.generalImpacts, item))}
+									/><span><strong>{item}</strong><small>{optionDescription(item)}</small></span
+									></label
+								>{/each}
+						</div>
+					</fieldset>
+				{/if}
 			{/if}
 			{#if currentStep === 2}
-			<fieldset class="glass-3 rounded-xl p-6 sm:p-8">
-				<div class="fieldset-title">4. Causas y descripción</div>
-				<div class="mt-6 grid gap-5 md:grid-cols-2">
-					<label
-						>Causa inmediata <span class="field-hint">Evento o situación por la cual se genera el riesgo. Ejemplo: por demoras en la validación.</span><textarea bind:value={form.immediateCause} rows="4" class="control" placeholder="por ..."
-						></textarea></label
-					><label
-						>Causa raíz <span class="field-hint">Origen de la causa por la cual se genera el riesgo. Ejemplo: debido a controles manuales insuficientes.</span><textarea bind:value={form.rootCause} rows="4" class="control" placeholder="debido a ..."
-						></textarea></label
-					><div class="md:col-span-2"><span>Descripción</span><textarea
-							value={assistedDescription}
-							on:input={updateDescription}
-							readonly={!manualDescription}
-							rows="4"
-							class="control"
-							placeholder="Ejemplo: Probabilidad de una afectación económica por demoras en la validación, debido a controles manuales insuficientes."
-						></textarea><label class="manual-toggle"><input type="checkbox" checked={manualDescription} on:change={toggleManualDescription} /> Corregir Descripción</label></div
-					>
-				</div>
-			</fieldset>
-			<fieldset class="glass-3 rounded-xl p-6 sm:p-8">
-				<div class="fieldset-title">5. Valoración inherente preliminar</div>
-				<div class="mt-6 grid gap-5 md:grid-cols-2">
-					<label
-						>Probabilidad<select
-							value={form.probability?.level || ''}
-							on:change={(e) => {
-								const selected = probabilities.find((opt) => opt.level === e.target.value);
-								form.probability = selected || '';
-							}}
-							class="control"
-							><option value="">Selecciona un nivel</option
-							>{#each probabilities as option (option.level)}<option value={option.level}>{option.level} ({option.value}) — {option.criterion}</option>{/each}</select
-						></label
-					>{#if form.type === 'Fiscal' || form.type === 'Seguridad de la Información' || form.generalImpacts.includes('Económica') || (form.type && !form.generalImpacts.length)}<label
-						>{form.type === 'Fiscal' ? 'Cuantía del efecto dañoso' : 'Impacto económico'}<select
-							value={form.economicImpact?.level || ''}
-							on:change={(e) => {
-								const selected = economicImpacts.find((opt) => opt.level === e.target.value);
-								form.economicImpact = selected || '';
-							}}
-							class="control"
-							><option value="">Selecciona un nivel</option>{#each economicImpacts as level (level.level)}<option
-								value={level.level}>{level.level} ({level.value}) — {level.criterion}</option
-								>{/each}</select
-						></label
-					>{/if}{#if form.type !== 'Fiscal' && (form.type === 'Seguridad de la Información' || form.generalImpacts.includes('Reputacional') || (form.type && !form.generalImpacts.length))}<label
-						>Impacto reputacional<select
-							value={form.reputationalImpact?.level || ''}
-							on:change={(e) => {
-								const selected = reputationalImpacts.find((opt) => opt.level === e.target.value);
-								form.reputationalImpact = selected || '';
-							}}
-							class="control"
-							><option value="">Selecciona un nivel</option>{#each reputationalImpacts as level (level.level)}<option
-								value={level.level}>{level.level} ({level.value}) — {level.criterion}</option
-								>{/each}</select
-						></label
-					>{/if}
-					
-				</div>
-				<div class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-					<div class="summary-box">
-						<div class="flex items-center gap-2">
-							Probabilidad inherente
-							<div class="h-3 w-3 rounded-full" class:bg-green-600={inherentCalculation.probabilityLevel === 'Muy Baja' || inherentCalculation.probabilityLevel === 'Baja'} class:bg-yellow-600={inherentCalculation.probabilityLevel === 'Media'} class:bg-orange-600={inherentCalculation.probabilityLevel === 'Alta'} class:bg-red-600={inherentCalculation.probabilityLevel === 'Muy Alta'} class:bg-gray-400={!inherentCalculation.probabilityLevel}></div>
+				<fieldset class="glass-3 rounded-xl p-6 sm:p-8">
+					<div class="fieldset-title">4. Causas y descripción</div>
+					<div class="mt-6 grid gap-5 md:grid-cols-2">
+						<label
+							>Causa inmediata <span class="field-hint"
+								>Evento o situación por la cual se genera el riesgo. Ejemplo: por demoras en la
+								validación.</span
+							><textarea
+								bind:value={form.immediateCause}
+								rows="4"
+								class="control"
+								placeholder="por ..."
+							></textarea></label
+						><label
+							>Causa raíz <span class="field-hint"
+								>Origen de la causa por la cual se genera el riesgo. Ejemplo: debido a controles
+								manuales insuficientes.</span
+							><textarea
+								bind:value={form.rootCause}
+								rows="4"
+								class="control"
+								placeholder="debido a ..."
+							></textarea></label
+						>
+						<div class="md:col-span-2">
+							<span>Descripción</span><textarea
+								value={assistedDescription}
+								on:input={updateDescription}
+								readonly={!manualDescription}
+								rows="4"
+								class="control"
+								placeholder="Ejemplo: Probabilidad de una afectación económica por demoras en la validación, debido a controles manuales insuficientes."
+							></textarea><label class="manual-toggle"
+								><input
+									type="checkbox"
+									checked={manualDescription}
+									on:change={toggleManualDescription}
+								/> Corregir Descripción</label
+							>
 						</div>
-						<strong class={getIntensityClass(inherentCalculation.probabilityLevel)}>{inherentCalculation.probabilityLevel || 'Pendiente'}{inherentCalculation.probability ? ` (${Math.round(inherentCalculation.probability * 100)} %)` : ''}</strong>
 					</div>
-					<div class="summary-box">
-						<div class="flex items-center gap-2">
-							Impacto inherente
-							<div class="h-3 w-3 rounded-full" class:bg-green-600={inherentCalculation.impactLevel === 'Leve'} class:bg-yellow-600={inherentCalculation.impactLevel === 'Menor' || inherentCalculation.impactLevel === 'Moderado'} class:bg-orange-600={inherentCalculation.impactLevel === 'Mayor'} class:bg-red-600={inherentCalculation.impactLevel === 'Catastrófico'} class:bg-gray-400={!inherentCalculation.impactLevel}></div>
+				</fieldset>
+				<fieldset class="glass-3 rounded-xl p-6 sm:p-8">
+					<div class="fieldset-title">5. Valoración inherente preliminar</div>
+					<div class="mt-6 grid gap-5 md:grid-cols-2">
+						<label
+							>Probabilidad<select
+								value={form.probability?.level || ''}
+								on:change={(e) => {
+									const selected = probabilities.find((opt) => opt.level === e.target.value);
+									form.probability = selected || '';
+								}}
+								class="control"
+								><option value="">Selecciona un nivel</option
+								>{#each probabilities as option (option.level)}<option value={option.level}
+										>{option.level} ({option.value}) — {option.criterion}</option
+									>{/each}</select
+							></label
+						>{#if form.type === 'Fiscal' || String(form.type || '').trim() === 'Seguridad de la Información' || form.generalImpacts.includes('Económica') || (form.type && !form.generalImpacts.length)}<label
+								>{form.type === 'Fiscal' ? 'Cuantía del efecto dañoso' : 'Impacto económico'}<select
+									value={form.economicImpact?.level || ''}
+									on:change={(e) => {
+										const selected = economicImpacts.find((opt) => opt.level === e.target.value);
+										form.economicImpact = selected || '';
+									}}
+									class="control"
+									><option value="">Selecciona un nivel</option
+									>{#each economicImpacts as level (level.level)}<option value={level.level}
+											>{level.level} ({level.value}) — {level.criterion}</option
+										>{/each}</select
+								></label
+							>{/if}{#if form.type !== 'Fiscal' && (String(form.type || '').trim() === 'Seguridad de la Información' || form.generalImpacts.includes('Reputacional') || (form.type && !form.generalImpacts.length))}<label
+								>Impacto reputacional<select
+									value={form.reputationalImpact?.level || ''}
+									on:change={(e) => {
+										const selected = reputationalImpacts.find(
+											(opt) => opt.level === e.target.value
+										);
+										form.reputationalImpact = selected || '';
+									}}
+									class="control"
+									><option value="">Selecciona un nivel</option
+									>{#each reputationalImpacts as level (level.level)}<option value={level.level}
+											>{level.level} ({level.value}) — {level.criterion}</option
+										>{/each}</select
+								></label
+							>{/if}
+					</div>
+					<div class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+						<div class="summary-box">
+							<div class="flex items-center gap-2">
+								Probabilidad inherente
+								<div
+									class="h-3 w-3 rounded-full"
+									class:bg-green-600={inherentCalculation.probabilityLevel === 'Muy Baja' ||
+										inherentCalculation.probabilityLevel === 'Baja'}
+									class:bg-yellow-600={inherentCalculation.probabilityLevel === 'Media'}
+									class:bg-orange-600={inherentCalculation.probabilityLevel === 'Alta'}
+									class:bg-red-600={inherentCalculation.probabilityLevel === 'Muy Alta'}
+									class:bg-gray-400={!inherentCalculation.probabilityLevel}
+								></div>
+							</div>
+							<strong class={getIntensityClass(inherentCalculation.probabilityLevel)}
+								>{inherentCalculation.probabilityLevel ||
+									'Pendiente'}{inherentCalculation.probability
+									? ` (${Math.round(inherentCalculation.probability * 100)} %)`
+									: ''}</strong
+							>
 						</div>
-						<strong class={getIntensityClass(inherentCalculation.impactLevel)}>{inherentCalculation.impactLevel || 'Pendiente'}{inherentCalculation.impactValue ? ` (${Math.round(inherentCalculation.impactValue * 100)} %)` : ''}</strong>
-					</div>
-					<div class="summary-box zone-card">
-						<div class="flex items-center gap-2">
-							Zona inherente
-							<div class="h-3 w-3 rounded-full" class:bg-green-600={inherentCalculation.zone === 'Bajo'} class:bg-yellow-600={inherentCalculation.zone === 'Moderado'} class:bg-orange-600={inherentCalculation.zone === 'Alto'} class:bg-red-600={inherentCalculation.zone === 'Extremo'} class:bg-gray-400={!inherentCalculation.zone}></div>
+						<div class="summary-box">
+							<div class="flex items-center gap-2">
+								Impacto inherente
+								<div
+									class="h-3 w-3 rounded-full"
+									class:bg-green-600={inherentCalculation.impactLevel === 'Leve'}
+									class:bg-yellow-600={inherentCalculation.impactLevel === 'Menor' ||
+										inherentCalculation.impactLevel === 'Moderado'}
+									class:bg-orange-600={inherentCalculation.impactLevel === 'Mayor'}
+									class:bg-red-600={inherentCalculation.impactLevel === 'Catastrófico'}
+									class:bg-gray-400={!inherentCalculation.impactLevel}
+								></div>
+							</div>
+							<strong class={getIntensityClass(inherentCalculation.impactLevel)}
+								>{inherentCalculation.impactLevel || 'Pendiente'}{inherentCalculation.impactValue
+									? ` (${Math.round(inherentCalculation.impactValue * 100)} %)`
+									: ''}</strong
+							>
 						</div>
-						<strong class={getIntensityClass(inherentCalculation.zone)}>{inherentCalculation.zone || 'Pendiente'}</strong>
+						<div class="summary-box zone-card">
+							<div class="flex items-center gap-2">
+								Zona inherente
+								<div
+									class="h-3 w-3 rounded-full"
+									class:bg-green-600={inherentCalculation.zone === 'Bajo'}
+									class:bg-yellow-600={inherentCalculation.zone === 'Moderado'}
+									class:bg-orange-600={inherentCalculation.zone === 'Alto'}
+									class:bg-red-600={inherentCalculation.zone === 'Extremo'}
+									class:bg-gray-400={!inherentCalculation.zone}
+								></div>
+							</div>
+							<strong class={getIntensityClass(inherentCalculation.zone)}
+								>{inherentCalculation.zone || 'Pendiente'}</strong
+							>
+						</div>
 					</div>
-				</div>
-			</fieldset>
+				</fieldset>
 			{/if}
 			{#if currentStep === 3}
-			<fieldset class="glass-3 rounded-xl p-6 sm:p-8">
-				<div class="fieldset-title">6. Controles Asociados</div
-				>{#each controls as control, index (control.id)}<div
-						class="mt-4 rounded-xl border border-gray-200/70 bg-white/50 p-4"
+				<fieldset class="glass-3 rounded-xl p-6 sm:p-8">
+					<div class="fieldset-title">6. Controles Asociados</div>
+					{#each controls as control, index (control.id)}<div
+							class="mt-4 rounded-xl border border-gray-200/70 bg-white/50 p-4"
+						>
+							<div class="mb-3 flex justify-between">
+								<h3>Control {index + 1}</h3>
+								<button
+									type="button"
+									class="text-sm text-red-600"
+									on:click={() => requestRemoveControl(control)}>Quitar</button
+								>
+							</div>
+							<div class="grid gap-4 md:grid-cols-3">
+								<label
+									>Responsable <span class="field-hint"
+										>Escribe el cargo responsable, no el nombre de una persona.</span
+									><input
+										aria-label="Responsable del control"
+										bind:value={control.responsible}
+										class="control"
+										placeholder="Auxiliar administrativa"
+									/></label
+								>
+								<label
+									>Frecuencia <span class="field-hint"
+										>Indica cada cuánto se ejecuta el control en condiciones normales.</span
+									><select
+										aria-label="Frecuencia del control"
+										bind:value={control.frequency}
+										class="control"
+										><option value="">Selecciona</option
+										>{#each controlFrequencies as frequency (frequency)}<option>{frequency}</option
+											>{/each}</select
+									></label
+								>
+								<label
+									>Acción <span class="field-hint">Inicia con un verbo.</span><textarea
+										aria-label="Acción del control"
+										bind:value={control.action}
+										rows="2"
+										class="control"
+										placeholder="asistirá a las jornadas de capacitación"
+									></textarea></label
+								>
+								<label
+									>Complemento <span class="field-hint"
+										>Cómo, con qué o para qué se realiza el control.</span
+									><textarea
+										aria-label="Complemento de la acción"
+										bind:value={control.actionComplement}
+										rows="2"
+										class="control"
+										placeholder="para conocer las actualizaciones y garantizar el uso adecuado del SISNET"
+									></textarea></label
+								>
+								<label
+									>Desviación y manejo <span class="field-hint"
+										>Qué ocurre cuando el control no se ejecuta o se presenta una desviación.</span
+									><textarea
+										aria-label="Desviación y manejo"
+										bind:value={control.deviation}
+										rows="2"
+										class="control"
+										placeholder="Describir la acción ante una desviación"
+									></textarea></label
+								>
+								<label
+									>Tipo de control <span class="field-hint"
+										>Indica en qué momento actúa el control: antes del evento, durante su detección
+										o después de la materialización.</span
+									><select aria-label="Tipo de control" bind:value={control.type} class="control"
+										><option value="">Selecciona</option>{#each controlTypes as type (type)}<option
+												>{type}</option
+											>{/each}</select
+									></label
+								>
+								<label
+									>Implementación <span class="field-hint"
+										>Indica si el control requiere intervención humana o si se ejecuta
+										principalmente mediante un sistema.</span
+									><select
+										aria-label="Implementación del control"
+										bind:value={control.implementation}
+										class="control"
+										><option value="">Selecciona</option
+										>{#each controlImplementations as implementation (implementation)}<option
+												>{implementation}</option
+											>{/each}</select
+									></label
+								>
+							</div>
+							<p class="mt-4 text-xs text-gray-500">
+								Efectividad estimada: <strong class="text-primary"
+									>{controlEffectiveness(control)
+										? `${Math.round(controlEffectiveness(control) * 100)} %`
+										: 'Pendiente'}</strong
+								>{#if control.type === 'Correctivo'}
+									— reduce el impacto{:else if control.type}
+									— reduce la probabilidad{:else}
+									— define tipo para determinar el efecto{/if}
+							</p>
+							<div class="mt-4 border-t border-gray-200/70 pt-4">
+								<div class="flex flex-wrap items-center justify-between gap-2">
+									<label
+										class="text-sm font-semibold text-gray-700"
+										for={`control-description-${control.id}`}
+										>Descripción redactada del control</label
+									>
+									<label class="manual-toggle"
+										><input
+											type="checkbox"
+											checked={control.manualDescription}
+											on:change={() => toggleControlDescription(control)}
+										/> Corregir descripción</label
+									>
+								</div>
+								<textarea
+									id={`control-description-${control.id}`}
+									aria-label="Descripción redactada del control"
+									value={controlDescription(control)}
+									on:input={(event) => updateControlDescription(control, event)}
+									readonly={!control.manualDescription}
+									rows="4"
+									class="control"
+									placeholder="Ejemplo: El auxiliar administrativo semanalmente revisa los soportes para validar la información registrada."
+								></textarea>
+							</div>
+						</div>{:else}<p class="mt-4 text-sm text-gray-500">
+							No hay controles asociados.
+						</p>{/each}<button type="button" class="action-button" on:click={addControl}
+						>+ Agregar control</button
 					>
-						<div class="mb-3 flex justify-between">
-							<h3>Control {index + 1}</h3>
-							<button
-								type="button"
-								class="text-sm text-red-600"
-								on:click={() => requestRemoveControl(control)}>Quitar</button
+				</fieldset>
+				<fieldset class="glass-3 rounded-xl p-6 sm:p-8">
+					<div class="fieldset-title">7. Valoración residual</div>
+					<p class="mt-2 text-sm text-gray-600">
+						Valoración por niveles según el Anexo 1 oficial: los controles se aplican
+						secuencialmente y el resultado se cruza en la matriz de severidad.
+					</p>
+					<div class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+						<div class="summary-box">
+							<div class="flex items-center gap-2">
+								Probabilidad residual
+								<div
+									class="h-3 w-3 rounded-full"
+									class:bg-green-600={residualCalculation.probabilityLevel === 'Muy Baja' ||
+										residualCalculation.probabilityLevel === 'Baja'}
+									class:bg-yellow-600={residualCalculation.probabilityLevel === 'Media'}
+									class:bg-orange-600={residualCalculation.probabilityLevel === 'Alta'}
+									class:bg-red-600={residualCalculation.probabilityLevel === 'Muy Alta'}
+									class:bg-gray-400={!residualCalculation.probabilityLevel}
+								></div>
+							</div>
+							<strong class={getIntensityClass(residualCalculation.probabilityLevel)}
+								>{residualCalculation.probabilityLevel ||
+									'Pendiente'}{residualCalculation.probability
+									? ` (${Math.round(residualCalculation.probability * 100)} %)`
+									: ''}</strong
 							>
 						</div>
-						<div class="grid gap-4 md:grid-cols-3">
-							<label>Responsable <span class="field-hint">Escribe el cargo responsable, no el nombre de una persona.</span><input aria-label="Responsable del control" bind:value={control.responsible} class="control" placeholder="Auxiliar administrativa" /></label>
-							<label>Frecuencia <span class="field-hint">Indica cada cuánto se ejecuta el control en condiciones normales.</span><select aria-label="Frecuencia del control" bind:value={control.frequency} class="control"><option value="">Selecciona</option>{#each controlFrequencies as frequency (frequency)}<option>{frequency}</option>{/each}</select></label>
-							<label>Acción <span class="field-hint">Inicia con un verbo.</span><textarea aria-label="Acción del control" bind:value={control.action} rows="2" class="control" placeholder="asistirá a las jornadas de capacitación"></textarea></label>
-							<label>Complemento <span class="field-hint">Cómo, con qué o para qué se realiza el control.</span><textarea aria-label="Complemento de la acción" bind:value={control.actionComplement} rows="2" class="control" placeholder="para conocer las actualizaciones y garantizar el uso adecuado del SISNET"></textarea></label>
-							<label>Desviación y manejo <span class="field-hint">Qué ocurre cuando el control no se ejecuta o se presenta una desviación.</span><textarea aria-label="Desviación y manejo" bind:value={control.deviation} rows="2" class="control" placeholder="Describir la acción ante una desviación"></textarea></label>
-							<label>Tipo de control <span class="field-hint">Indica en qué momento actúa el control: antes del evento, durante su detección o después de la materialización.</span><select aria-label="Tipo de control" bind:value={control.type} class="control"><option value="">Selecciona</option>{#each controlTypes as type (type)}<option>{type}</option>{/each}</select></label>
-							<label>Implementación <span class="field-hint">Indica si el control requiere intervención humana o si se ejecuta principalmente mediante un sistema.</span><select aria-label="Implementación del control" bind:value={control.implementation} class="control"><option value="">Selecciona</option>{#each controlImplementations as implementation (implementation)}<option>{implementation}</option>{/each}</select></label>
-						</div>
-						<p class="mt-4 text-xs text-gray-500">Efectividad estimada: <strong class="text-primary">{controlEffectiveness(control) ? `${Math.round(controlEffectiveness(control) * 100)} %` : 'Pendiente'}</strong>{#if control.type === 'Correctivo'} — reduce el impacto{:else if control.type} — reduce la probabilidad{:else} — define tipo para determinar el efecto{/if}</p>
-						<div class="mt-4 border-t border-gray-200/70 pt-4">
-							<div class="flex flex-wrap items-center justify-between gap-2">
-								<label class="text-sm font-semibold text-gray-700" for={`control-description-${control.id}`}>Descripción redactada del control</label>
-								<label class="manual-toggle"><input type="checkbox" checked={control.manualDescription} on:change={() => toggleControlDescription(control)} /> Corregir descripción</label>
+						<div class="summary-box">
+							<div class="flex items-center gap-2">
+								Impacto residual
+								<div
+									class="h-3 w-3 rounded-full"
+									class:bg-green-600={residualCalculation.impactLevel === 'Leve'}
+									class:bg-yellow-600={residualCalculation.impactLevel === 'Menor' ||
+										residualCalculation.impactLevel === 'Moderado'}
+									class:bg-orange-600={residualCalculation.impactLevel === 'Mayor'}
+									class:bg-red-600={residualCalculation.impactLevel === 'Catastrófico'}
+									class:bg-gray-400={!residualCalculation.impactLevel}
+								></div>
 							</div>
-							<textarea id={`control-description-${control.id}`} aria-label="Descripción redactada del control" value={controlDescription(control)} on:input={(event) => updateControlDescription(control, event)} readonly={!control.manualDescription} rows="4" class="control" placeholder="Ejemplo: El auxiliar administrativo semanalmente revisa los soportes para validar la información registrada."></textarea>
+							<strong class={getIntensityClass(residualCalculation.impactLevel)}
+								>{residualCalculation.impactLevel || 'Pendiente'}{residualCalculation.impact
+									? ` (${Math.round(residualCalculation.impact * 100)} %)`
+									: ''}</strong
+							>
 						</div>
-					</div>{:else}<p class="mt-4 text-sm text-gray-500">
-						No hay controles asociados.
-					</p>{/each}<button type="button" class="action-button" on:click={addControl}
-					>+ Agregar control</button
-				>
-			</fieldset>
-			<fieldset class="glass-3 rounded-xl p-6 sm:p-8">
-				<div class="fieldset-title">7. Valoración residual</div>
-				<p class="mt-2 text-sm text-gray-600">
-					Valoración por niveles según el Anexo 1 oficial: los controles se aplican secuencialmente y el resultado se cruza en la matriz de severidad.
-				</p>
-				<div class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-					<div class="summary-box">
-						<div class="flex items-center gap-2">
-							Probabilidad residual
-							<div class="h-3 w-3 rounded-full" class:bg-green-600={residualCalculation.probabilityLevel === 'Muy Baja' || residualCalculation.probabilityLevel === 'Baja'} class:bg-yellow-600={residualCalculation.probabilityLevel === 'Media'} class:bg-orange-600={residualCalculation.probabilityLevel === 'Alta'} class:bg-red-600={residualCalculation.probabilityLevel === 'Muy Alta'} class:bg-gray-400={!residualCalculation.probabilityLevel}></div>
+						<div class="summary-box zone-card">
+							<div class="flex items-center gap-2">
+								Zona residual
+								<div
+									class="h-3 w-3 rounded-full"
+									class:bg-green-600={residualCalculation.zone === 'Bajo'}
+									class:bg-yellow-600={residualCalculation.zone === 'Moderado'}
+									class:bg-orange-600={residualCalculation.zone === 'Alto'}
+									class:bg-red-600={residualCalculation.zone === 'Extremo'}
+									class:bg-gray-400={!residualCalculation.zone}
+								></div>
+							</div>
+							<strong class={getIntensityClass(residualCalculation.zone)}
+								>{residualCalculation.zone}</strong
+							>
 						</div>
-						<strong class={getIntensityClass(residualCalculation.probabilityLevel)}>{residualCalculation.probabilityLevel || 'Pendiente'}{residualCalculation.probability ? ` (${Math.round(residualCalculation.probability * 100)} %)` : ''}</strong>
 					</div>
-					<div class="summary-box">
-						<div class="flex items-center gap-2">
-							Impacto residual
-							<div class="h-3 w-3 rounded-full" class:bg-green-600={residualCalculation.impactLevel === 'Leve'} class:bg-yellow-600={residualCalculation.impactLevel === 'Menor' || residualCalculation.impactLevel === 'Moderado'} class:bg-orange-600={residualCalculation.impactLevel === 'Mayor'} class:bg-red-600={residualCalculation.impactLevel === 'Catastrófico'} class:bg-gray-400={!residualCalculation.impactLevel}></div>
-						</div>
-						<strong class={getIntensityClass(residualCalculation.impactLevel)}>{residualCalculation.impactLevel || 'Pendiente'}{residualCalculation.impact ? ` (${Math.round(residualCalculation.impact * 100)} %)` : ''}</strong>
-					</div>
-					<div class="summary-box zone-card">
-						<div class="flex items-center gap-2">
-							Zona residual
-							<div class="h-3 w-3 rounded-full" class:bg-green-600={residualCalculation.zone === 'Bajo'} class:bg-yellow-600={residualCalculation.zone === 'Moderado'} class:bg-orange-600={residualCalculation.zone === 'Alto'} class:bg-red-600={residualCalculation.zone === 'Extremo'} class:bg-gray-400={!residualCalculation.zone}></div>
-						</div>
-						<strong class={getIntensityClass(residualCalculation.zone)}>{residualCalculation.zone}</strong>
-					</div>
-				</div>
-				<p class="mt-4 text-sm text-gray-600">Riesgo inherente: <strong>{inherentCalculation.probabilityLevel || 'Pendiente'} ({inherentCalculation.probability ? `${Math.round(inherentCalculation.probability * 100)} %` : '—'}) + {inherentCalculation.impactLevel || 'Pendiente'} ({inherentCalculation.impactValue ? `${Math.round(inherentCalculation.impactValue * 100)} %` : '—'})</strong> = <strong>{inherentCalculation.zone || 'Pendiente'}</strong></p>
-				<p class="mt-3 text-xs text-gray-500">
-					Controles aplicados: {residualCalculation.controlCount}. Reducción de probabilidad: {Math.round(residualCalculation.probabilityReduction * 100)} %. Reducción de impacto: {Math.round(residualCalculation.impactReduction * 100)} %.
-				</p>
-			</fieldset>
+					<p class="mt-4 text-sm text-gray-600">
+						Riesgo inherente: <strong
+							>{inherentCalculation.probabilityLevel || 'Pendiente'} ({inherentCalculation.probability
+								? `${Math.round(inherentCalculation.probability * 100)} %`
+								: '—'}) + {inherentCalculation.impactLevel || 'Pendiente'} ({inherentCalculation.impactValue
+								? `${Math.round(inherentCalculation.impactValue * 100)} %`
+								: '—'})</strong
+						>
+						= <strong>{inherentCalculation.zone || 'Pendiente'}</strong>
+					</p>
+					<p class="mt-3 text-xs text-gray-500">
+						Controles aplicados: {residualCalculation.controlCount}. Reducción de probabilidad: {Math.round(
+							residualCalculation.probabilityReduction * 100
+						)} %. Reducción de impacto: {Math.round(residualCalculation.impactReduction * 100)} %.
+					</p>
+				</fieldset>
 			{/if}
 			{#if false}
-			<fieldset class="glass-3 rounded-xl p-6 sm:p-8">
-				<div class="fieldset-title">8. Tratamiento y acciones</div
-				>{#each treatments as treatment, index (treatment.id)}<div
-						class="mt-4 rounded-xl border bg-white/50 p-4"
+				<fieldset class="glass-3 rounded-xl p-6 sm:p-8">
+					<div class="fieldset-title">8. Tratamiento y acciones</div>
+					{#each treatments as treatment, index (treatment.id)}<div
+							class="mt-4 rounded-xl border bg-white/50 p-4"
+						>
+							<div class="mb-3 flex justify-between">
+								<h3>Tratamiento {index + 1}</h3>
+								<button
+									type="button"
+									class="text-sm text-red-600"
+									on:click={() => removeTreatment(treatment.id)}>Quitar</button
+								>
+							</div>
+							<div class="grid gap-4 md:grid-cols-2">
+								<select aria-label="Tratamiento" bind:value={treatment.option} class="control"
+									><option value="">Opción de tratamiento</option
+									>{#each riskFormOptions.treatments as option (option)}<option>{option}</option
+										>{/each}</select
+								><input
+									aria-label="Justificación"
+									bind:value={treatment.reason}
+									class="control"
+									placeholder="Justificación o responsable"
+								/><input
+									aria-label="Acción"
+									bind:value={treatment.action}
+									class="control md:col-span-2"
+									placeholder="Acción propuesta"
+								/>
+							</div>
+						</div>{:else}<p class="mt-4 text-sm text-gray-500">
+							No hay tratamientos asociados.
+						</p>{/each}<button type="button" class="action-button" on:click={addTreatment}
+						>+ Agregar tratamiento</button
 					>
-						<div class="mb-3 flex justify-between">
-							<h3>Tratamiento {index + 1}</h3>
-							<button
-								type="button"
-								class="text-sm text-red-600"
-								on:click={() => removeTreatment(treatment.id)}>Quitar</button
-							>
+				</fieldset>
+				<fieldset class="glass-3 rounded-xl p-6 sm:p-8">
+					<div class="fieldset-title">9. Seguimiento y materialización</div>
+					<div class="grid gap-6 lg:grid-cols-2">
+						<div>
+							{#each followUps as item (item.key)}<div
+									class="mt-4 rounded-xl border bg-white/50 p-4"
+								>
+									<div class="mb-3 flex justify-between">
+										<div>
+											<h3>{item.label}</h3>
+											<p class="text-xs font-normal text-gray-500">{item.sub}</p>
+										</div>
+									</div>
+									<div class="grid gap-3">
+										<input
+											aria-label="Fecha"
+											bind:value={item.date}
+											type="date"
+											class="control"
+										/><input
+											aria-label="Estado"
+											bind:value={item.status}
+											class="control"
+											placeholder="Estado"
+										/><input
+											aria-label="Observaciones"
+											bind:value={item.notes}
+											class="control"
+											placeholder="Observaciones"
+										/>
+									</div>
+								</div>{/each}
 						</div>
-						<div class="grid gap-4 md:grid-cols-2">
-							<select aria-label="Tratamiento" bind:value={treatment.option} class="control"
-								><option value="">Opción de tratamiento</option
-								>{#each riskFormOptions.treatments as option (option)}<option>{option}</option
-									>{/each}</select
-							><input
-								aria-label="Justificación"
-								bind:value={treatment.reason}
-								class="control"
-								placeholder="Justificación o responsable"
-							/><input
-								aria-label="Acción"
-								bind:value={treatment.action}
-								class="control md:col-span-2"
-								placeholder="Acción propuesta"
-							/>
-						</div>
-					</div>{:else}<p class="mt-4 text-sm text-gray-500">
-						No hay tratamientos asociados.
-					</p>{/each}<button type="button" class="action-button" on:click={addTreatment}
-					>+ Agregar tratamiento</button
-				>
-			</fieldset>
-			<fieldset class="glass-3 rounded-xl p-6 sm:p-8">
-				<div class="fieldset-title">9. Seguimiento y materialización</div
-				>
-				<div class="grid gap-6 lg:grid-cols-2">
-					<div>
-						{#each followUps as item (item.key)}<div
-								class="mt-4 rounded-xl border bg-white/50 p-4"
-							>
-								<div class="mb-3 flex justify-between">
-									<div><h3>{item.label}</h3><p class="text-xs font-normal text-gray-500">{item.sub}</p></div>
-								</div>
-								<div class="grid gap-3">
+						<div>
+							{#each materializations as item, index (item.id)}<div
+									class="mt-4 rounded-xl border bg-white/50 p-4"
+								>
+									<div class="mb-3 flex justify-between">
+										<h3>Materialización {index + 1}</h3>
+										<button
+											type="button"
+											class="text-sm text-red-600"
+											on:click={() => removeMaterialization(item.id)}>Quitar</button
+										>
+									</div>
 									<input
 										aria-label="Fecha"
 										bind:value={item.date}
 										type="date"
 										class="control"
-									/><input
-										aria-label="Estado"
-										bind:value={item.status}
-										class="control"
-										placeholder="Estado"
-									/><input
-										aria-label="Observaciones"
-										bind:value={item.notes}
-										class="control"
-										placeholder="Observaciones"
-									/>
-								</div>
-							</div>{/each}
-					</div>
-					<div>
-						{#each materializations as item, index (item.id)}<div
-								class="mt-4 rounded-xl border bg-white/50 p-4"
+									/><textarea
+										aria-label="Descripción"
+										bind:value={item.description}
+										rows="2"
+										class="control mt-3"
+										placeholder="Descripción y consecuencias"
+									></textarea>
+								</div>{:else}<p class="mt-4 text-sm text-gray-500">
+									No hay materializaciones.
+								</p>{/each}<button type="button" class="action-button" on:click={addMaterialization}
+								>+ Registrar materialización</button
 							>
-								<div class="mb-3 flex justify-between">
-									<h3>Materialización {index + 1}</h3>
-									<button
-										type="button"
-										class="text-sm text-red-600"
-										on:click={() => removeMaterialization(item.id)}>Quitar</button
-									>
-								</div>
-								<input
-									aria-label="Fecha"
-									bind:value={item.date}
-									type="date"
-									class="control"
-								/><textarea
-									aria-label="Descripción"
-									bind:value={item.description}
-									rows="2"
-									class="control mt-3"
-									placeholder="Descripción y consecuencias"
-								></textarea>
-							</div>{:else}<p class="mt-4 text-sm text-gray-500">
-								No hay materializaciones.
-							</p>{/each}<button type="button" class="action-button" on:click={addMaterialization}
-							>+ Registrar materialización</button
-						>
+						</div>
 					</div>
-				</div>
-			</fieldset>
-			<fieldset class="glass-3 rounded-xl p-6 sm:p-8">
-				<div class="fieldset-title">10. Evidencias</div
-				>{#each evidences as evidence, index (evidence.id)}<div
-						class="mt-4 grid gap-3 rounded-xl border bg-white/50 p-4 md:grid-cols-3"
-					>
-						<input
-							aria-label="Nombre"
-							bind:value={evidence.name}
-							class="control"
-							placeholder="Nombre"
-						/><input
-							aria-label="Tipo"
-							bind:value={evidence.type}
-							class="control"
-							placeholder="Tipo"
-						/><select aria-label="Asociación" bind:value={evidence.relatedTo} class="control"
-							><option value="">Asociada a</option><option>Control</option><option
-								>Tratamiento</option
-							><option>Seguimiento</option><option>Materialización</option></select
-						><button
-							type="button"
-							class="text-left text-sm text-red-600 md:col-span-3"
-							on:click={() => removeEvidence(evidence.id)}>Quitar evidencia {index + 1}</button
+				</fieldset>
+				<fieldset class="glass-3 rounded-xl p-6 sm:p-8">
+					<div class="fieldset-title">10. Evidencias</div>
+					{#each evidences as evidence, index (evidence.id)}<div
+							class="mt-4 grid gap-3 rounded-xl border bg-white/50 p-4 md:grid-cols-3"
 						>
-					</div>{:else}<p class="mt-4 text-sm text-gray-500">
-						No hay evidencias preparadas.
-					</p>{/each}<button type="button" class="action-button" on:click={addEvidence}
-					>+ Agregar evidencia</button
-				>
-			</fieldset>
+							<input
+								aria-label="Nombre"
+								bind:value={evidence.name}
+								class="control"
+								placeholder="Nombre"
+							/><input
+								aria-label="Tipo"
+								bind:value={evidence.type}
+								class="control"
+								placeholder="Tipo"
+							/><select aria-label="Asociación" bind:value={evidence.relatedTo} class="control"
+								><option value="">Asociada a</option><option>Control</option><option
+									>Tratamiento</option
+								><option>Seguimiento</option><option>Materialización</option></select
+							><button
+								type="button"
+								class="text-left text-sm text-red-600 md:col-span-3"
+								on:click={() => removeEvidence(evidence.id)}>Quitar evidencia {index + 1}</button
+							>
+						</div>{:else}<p class="mt-4 text-sm text-gray-500">
+							No hay evidencias preparadas.
+						</p>{/each}<button type="button" class="action-button" on:click={addEvidence}
+						>+ Agregar evidencia</button
+					>
+				</fieldset>
 			{/if}
 			<div class="flex flex-wrap justify-end gap-3">
 				{#if currentStep > 1}<button
-					type="button"
-					class="rounded-lg border border-gray-300 bg-white/60 px-5 py-2.5 text-sm font-semibold text-gray-700"
-					on:click={goPrevious}>Anterior</button
-				>{/if}{#if currentStep < 3}<button
-					type="button"
-					class="bg-primary rounded-lg px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
-					on:click={goNext}>Siguiente</button
-				>{:else}<button
-					type="submit"
-					class="bg-primary rounded-lg px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
-					>Guardar riesgo</button
-				>{/if}
+						type="button"
+						class="rounded-lg border border-gray-300 bg-white/60 px-5 py-2.5 text-sm font-semibold text-gray-700"
+						on:click={goPrevious}>Anterior</button
+					>{/if}{#if currentStep < 3}<button
+						type="button"
+						class="bg-primary rounded-lg px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+						on:click={goNext}>Siguiente</button
+					>{:else}<button
+						type="submit"
+						class="bg-primary rounded-lg px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+						>Guardar riesgo</button
+					>{/if}
 			</div>
 		</form>
 	</div>
@@ -904,9 +1257,13 @@
 		font-size: 0.875rem;
 		font-weight: 600;
 		text-align: left;
-		transition: border-color 180ms ease, color 180ms ease;
+		transition:
+			border-color 180ms ease,
+			color 180ms ease;
 	}
-	.stepper button:hover:not(:disabled) { color: #1d4ed8; }
+	.stepper button:hover:not(:disabled) {
+		color: #1d4ed8;
+	}
 	.stepper button span {
 		line-height: 1.25rem;
 	}
@@ -923,8 +1280,15 @@
 		color: #2563eb;
 	}
 	@media (max-width: 640px) {
-		.stepper { gap: 0.35rem; padding: 0.35rem; }
-		.stepper button { display: grid; gap: 0.15rem; font-size: 0.75rem; }
+		.stepper {
+			gap: 0.35rem;
+			padding: 0.35rem;
+		}
+		.stepper button {
+			display: grid;
+			gap: 0.15rem;
+			font-size: 0.75rem;
+		}
 	}
 	:global(fieldset) {
 		min-width: 0;
@@ -1068,10 +1432,26 @@
 		border-color: #fde68a;
 		background: rgb(254 243 199 / 70%);
 	}
-	:global(.zone-card) { border-width: 1px; }
-	:global(.zone-bajo) { border-color: rgb(34 197 94 / 45%); background: rgb(220 252 231 / 58%); }
-	:global(.zone-moderado) { border-color: rgb(234 179 8 / 48%); background: rgb(254 249 195 / 62%); }
-	:global(.zone-alto) { border-color: rgb(249 115 22 / 48%); background: rgb(255 237 213 / 62%); }
-	:global(.zone-extremo) { border-color: rgb(239 68 68 / 52%); background: rgb(254 226 226 / 66%); }
-	:global(.zone-card strong) { color: #374151; }
+	:global(.zone-card) {
+		border-width: 1px;
+	}
+	:global(.zone-bajo) {
+		border-color: rgb(34 197 94 / 45%);
+		background: rgb(220 252 231 / 58%);
+	}
+	:global(.zone-moderado) {
+		border-color: rgb(234 179 8 / 48%);
+		background: rgb(254 249 195 / 62%);
+	}
+	:global(.zone-alto) {
+		border-color: rgb(249 115 22 / 48%);
+		background: rgb(255 237 213 / 62%);
+	}
+	:global(.zone-extremo) {
+		border-color: rgb(239 68 68 / 52%);
+		background: rgb(254 226 226 / 66%);
+	}
+	:global(.zone-card strong) {
+		color: #374151;
+	}
 </style>
